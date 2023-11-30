@@ -160,12 +160,121 @@ class IntroPage(Page):
     def run(self):
         self.render()    # Renders the instructions to the game
 
+    def do_game_intro():
+        '''
+        Renders the Instructions and accepts user input if PVP
+        developer-in-charge: mayo
+        '''
+        render_intro()    # Renders the instructions to the game
+        if gameDifficulty == "PVP":
+            players = get_players_names()    # Waits for user
+        else:
+            startButton = tk.Button(
+                                text="Start Game",
+                                command = lambda: update_info_from_intro('QUESTION_SELECT', PlayerNames),
+                                font=ss.PRIMARY_BUTTON["FONT"],
+                                bg=ss.PRIMARY_BUTTON["BACKGROUND_COLOR"],
+                                fg=ss.PRIMARY_BUTTON["FONT_COLOR"])
+            startButton.pack()
+
     def render():
         pass
+    
+    def render_intro():
+        '''
+        prints the info for the intro
+        accepts name as input when PVP
+        ->no return value
+        developer-in-charge: Chloe
+        '''
+        global ENVIRONMENT
+        global root
+        global FONT
+        global gameDifficulty
+        global scaledLogo
+        global Images
+        global SCREEN_HEIGHT
+
+        if ENVIRONMENT == "COLAB":
+            output.clear()
+
+            print('HOW TO PLAY:')
+            print('1. Click the "Start" button to begin the game. \n2. Select the category of questions you want to answer \n3. You will be presented with a question from the selected category. \n4. Read the question and carefully consider the answer choices (a, b, c). \n5. Click on the choice that you believe is correct. \n6. Your final score will be displayed at the end of the game')
+
+            if gameDifficulty == "PVP":
+            print("====ENTER PLAYER NAMES (FOR PVP)===")
+        else:
+            # Clear Screen
+            clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            # Display Header
+            header = tk.Label(
+                            text= f'HOW TO PLAY:',
+                            font=ss.H2["FONT"],
+                            fg=ss.H2["FONT_COLOR"],
+                            bg=ss.H2["BACKGROUND_COLOR"])
+            header.pack(pady=SCREEN_HEIGHT/20)
+
+            #Rules and Story Table
+            table = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            table.columnconfigure(0, weight=1)
+            table.columnconfigure(1, weight=3)
+
+            #Display Story
+            storyFrame = tk.Frame(table, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            storyFrame.grid(column=2, row=0, sticky=tk.W+tk.E)
+
+            story = tk.Label(
+                    text="You are an aspiring businessman who just opened their first store. In order to lead a successful company, you must answer a set of questions with corresponding monetary values. When you answer a question correctly, you will acquire its value which you can use to grow your business.\n\nAnother ambitious businessman has come to town in hopes of building their business here. The two businessmen must now compete in order to gain more money to boost their companies and become the leading tycoon of the city!",
+                    master=storyFrame,
+                    font = ss.REGULAR_TEXT["FONT"],
+                    fg=ss.COLORS["ACCENT_GOLD"],
+                    bg=ss.COLORS["DARK_MONEY_GREEN"],
+                    wraplength=600, justify="left")
+            story.pack(anchor="w", padx=10, pady=1, ipady=10)
+
+
+
+
+            # Display Rules
+            ruleFrame = tk.Frame(table,bg=ss.COLORS["DARK_MONEY_GREEN"])
+            ruleFrame.grid(column=1, row=0, sticky=tk.W)
+            rules = '1. Click the "Start" button to begin the game.|2. Select the category of questions you want to answer|3. You will be presented with a question from the selected category.|4. Read the question and carefully consider the answer choices (a, b, c).|5. Click on the choice that you believe is correct.|6. Your final score will be displayed at the end of the game'.split("|")
+            for rule in rules:
+            textLine = tk.Label(
+                                text=rule, master=ruleFrame,
+                                font = ss.REGULAR_TEXT["FONT"],
+                                fg=ss.REGULAR_TEXT["FONT_COLOR"],
+                                bg=ss.COLORS["DARK_MONEY_GREEN"])
+            textLine.pack(anchor="w", padx=10, pady=1)
+
+            table.pack(fill="x", padx=15, pady=10)
+            return 
 
     def process():
         pass
 
+    def update_info_from_intro(nextScene, players):
+        '''
+        changes scene from intro to question select
+        -> no return value
+        developer-in-charge: mayo
+        '''
+        global gameDifficulty
+        global PlayerNames
+        global ENVIRONMENT
+
+        PlayerNames = players
+
+        #Change Scene based on ENVIRONMENT
+        if ENVIRONMENT == "COLAB":
+            change_scene_to(nextScene)
+        else:
+            do_question_select()
 
 class MenuPage(Page):
     '''
@@ -199,12 +308,167 @@ class QuestionBoardPage(Page):
 
     def run():
         pass
+    
+    def do_question_select():
+        '''
+        renders the question board, selects a random question if bot's turn
+        developer-in-charge: mayo
+        '''
+        render_question_board()
+        if (not isPlayerMove) and (gameDifficulty!='PVP'): #If bot's move, choose a question randomly
+            selectedCategory, selectedBid = get_bot_chosen_question()   # Gets the user's input for the question parameters
+            root.after(1500, lambda: update_info_from_question_select('IrrelevantArg', selectedCategory, selectedBid))
 
     def render():
         pass
 
+    def render_question_board():
+        '''
+        prints the info for the question board
+        Displays button for each question
+        ->no return value
+        developer-in-charge: mayo
+        '''
+        global actualQuestions
+        global gameDifficulty
+        global ENVIRONMENT
+        global FONT
+        global Images
+        global isPlayerMove
+
+        categoryHeaders = ["History: 1", "Science: 2", "Business: 3", "Pop Culture: 4"]
+        if ENVIRONMENT == "COLAB":
+            output.clear()
+
+
+            # Formats the questions into a table for the tabulate method
+            questionTable = [
+                [], # $200 questions
+                [], # $400 questions
+                [], # $600 questions
+                [], # $800 questions
+                []  # Not really needed, but untouched in fear of breaking the code
+            ]
+
+            for category in actualQuestions: #loops through the categories
+            for questionInfo in actualQuestions[category]: #loops through the questions per categories
+                questionIndex = actualQuestions[category].index(questionInfo)
+                formattedBid = "$ " + str(questionInfo["value"])    # Text Formatting
+                questionTable[questionIndex].append(formattedBid)   # Adds the bid value to its appropriate list
+
+            print(tabulate(questionTable, headers=categoryHeaders))
+
+            # Displayed to add realism
+            if (not isPlayerMove) and (gameDifficulty != "PVP"):
+            print("Bot is thinking...")
+
+        else:
+            #FOR NOTEBOOK ENVIRONMENTS
+            # Clear Screen
+            clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            # Configure Table
+            nameInputFrame = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            for columns in range(4):
+            nameInputFrame.columnconfigure(columns, weight=1)
+
+            # Spacer
+            northPadding = tk.Frame(root)
+            northPadding.pack(pady=30)
+
+            #Display Category Names
+            for columns, category in enumerate(categoryHeaders):
+            categoryLabel = tk.Label(
+                                nameInputFrame,text=category[:-3],
+                                font=ss.H1["FONT"],
+                                height=2,
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.H1["FONT_COLOR"])
+            categoryLabel.grid(column=columns, row=0)
+
+            #loop Through Categories
+            for categoryNum, category in enumerate(actualQuestions):
+            for questionNum, questions in enumerate(actualQuestions[category]): #loops through the questions in category
+                formattedBid = "$" + str(questions["value"])
+                questionSelect = tk.Button(
+                                        nameInputFrame,
+                                        text=formattedBid,
+                                        font=ss.BID_CARD["FONT"],
+                                        height=2,
+                                        command= lambda catNum = (categoryNum+1)%4,
+                                                        bidVal = questions["value"]:update_info_from_question_select("IrrelevantArg", catNum, bidVal),
+                                        fg=ss.BID_CARD["FONT_COLOR"],
+                                        bg=ss.BID_CARD["BACKGROUND_COLOR"])
+                questionSelect.grid(row=questionNum+1, column=(categoryNum)%4, sticky="EW")
+
+                if (formattedBid=="$---" or formattedBid == "$-GOLDEN-$") or ((not isPlayerMove) and (gameDifficulty!="PVP")):
+                questionSelect.configure(state="disabled") #Disabled when already asked OR bot's move
+
+            nameInputFrame.pack(fill="both", pady=5, padx=25)
+
+            # Shows host saying whose turn it is
+            prompts = ["Your Move!", "Time to shine! :>", "Choose your question! OwO", "Your Turn!", "Your Turn Pookie bear!"]
+            hostFrame = tk.Frame(root, bg=ss.PRIMARY_BUTTON["BACKGROUND_COLOR"],)
+            hostFrame.columnconfigure(0, weight=1)
+            hostFrame.columnconfigure(1, weight=2)
+
+            hostImage = tk.Label(hostFrame, image=Images["small_host"], bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+            hostImage.grid(column=0, row=0, sticky="w")
+
+            currentContestant = "HELLO"
+            if isPlayerMove:
+            currentContestant = PlayerNames[0]
+            else:
+            currentContestant = PlayerNames[1]
+
+
+            hostPrompt = tk.Label(
+                            hostFrame,
+                            text=f"{currentContestant}, {choice(prompts)}",
+                            font=ss.PRIMARY_BUTTON["FONT"],
+                            fg=ss.PRIMARY_BUTTON["FONT_COLOR"],
+                            bg=ss.PRIMARY_BUTTON["BACKGROUND_COLOR"],
+                            justify="left")
+            hostPrompt.grid(column=1, row=0, sticky="w")
+
+
+            hostFrame.pack(fill="x", padx=20, pady=20)
+    
     def process():
         pass
+
+    def update_info_from_question_select(nextScene, questionCategory, questionBidValue):
+        '''
+        Edits the currentQuestion var to a dict containing the question details
+        str, int, str -> no return value
+        developer-in-charge: mayo
+        '''
+        global lastBidValue
+        global currentQuestion
+        global ENVIRONMENT
+
+        #Update Bid Value
+        lastBidValue = int(questionBidValue)
+
+        #Get the question
+        currentQuestion = get_question(questionCategory, questionBidValue)
+
+        #Mark the question as asked
+        currentQuestion["isAlreadyAsked"] = True
+        if currentQuestion["isGolden"]:
+            currentQuestion["value"] = "-GOLDEN-$"
+        else:
+            currentQuestion["value"] = "---"
+
+        # Change Scene Based on Environment
+        if ENVIRONMENT == "COLAB":
+            change_scene_to(nextScene)
+        else:
+            do_question_showing()
 
 
 class QuestionCardPage(Page):
