@@ -119,7 +119,7 @@ class Page(ABC):
     None: None
     """
 
-    @abstractmethod #hello
+    @abstractmethod
     def run():
         '''
         everything necessary for the page to run
