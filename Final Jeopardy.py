@@ -158,14 +158,11 @@ class IntroPage(Page):
     '''
 
     def run(self):
-        self.render()    # Renders the instructions to the game
-
-    def do_game_intro():
         '''
         Renders the Instructions and accepts user input if PVP
         developer-in-charge: mayo
         '''
-        render_intro()    # Renders the instructions to the game
+        self.render()    # Renders the instructions to the game
         if gameDifficulty == "PVP":
             players = get_players_names()    # Waits for user
         else:
@@ -178,9 +175,6 @@ class IntroPage(Page):
             startButton.pack()
 
     def render():
-        pass
-    
-    def render_intro():
         '''
         prints the info for the intro
         accepts name as input when PVP
@@ -202,7 +196,7 @@ class IntroPage(Page):
             print('1. Click the "Start" button to begin the game. \n2. Select the category of questions you want to answer \n3. You will be presented with a question from the selected category. \n4. Read the question and carefully consider the answer choices (a, b, c). \n5. Click on the choice that you believe is correct. \n6. Your final score will be displayed at the end of the game')
 
             if gameDifficulty == "PVP":
-            print("====ENTER PLAYER NAMES (FOR PVP)===")
+             print("====ENTER PLAYER NAMES (FOR PVP)===")
         else:
             # Clear Screen
             clear_notebook_screen()
@@ -245,20 +239,17 @@ class IntroPage(Page):
             ruleFrame.grid(column=1, row=0, sticky=tk.W)
             rules = '1. Click the "Start" button to begin the game.|2. Select the category of questions you want to answer|3. You will be presented with a question from the selected category.|4. Read the question and carefully consider the answer choices (a, b, c).|5. Click on the choice that you believe is correct.|6. Your final score will be displayed at the end of the game'.split("|")
             for rule in rules:
-            textLine = tk.Label(
+                textLine = tk.Label(
                                 text=rule, master=ruleFrame,
                                 font = ss.REGULAR_TEXT["FONT"],
                                 fg=ss.REGULAR_TEXT["FONT_COLOR"],
                                 bg=ss.COLORS["DARK_MONEY_GREEN"])
-            textLine.pack(anchor="w", padx=10, pady=1)
+                textLine.pack(anchor="w", padx=10, pady=1)
 
             table.pack(fill="x", padx=15, pady=10)
             return 
 
-    def process():
-        pass
-
-    def update_info_from_intro(nextScene, players):
+    def process(nextScene, players):
         '''
         changes scene from intro to question select
         -> no return value
@@ -290,10 +281,95 @@ class MenuPage(Page):
         pass
 
     def render():
-        pass
+        '''
+        prints the info for the menu
+        Accepts user input via buttons
+        ->no return value
+        developer-in-charge: Sam
+        '''
+        global root
+        global ENVIRONMENT
+        global FONT
+        global Images
 
-    def process():
-        pass
+        if ENVIRONMENT == "COLAB":
+            output.clear() # Clears the output console
+
+            print('''
+        ███    ███ ██ ███    ██ ██          ██ ███████  ██████  ██████   █████  ██████  ██████  ██    ██
+        ████  ████ ██ ████   ██ ██          ██ ██      ██    ██ ██   ██ ██   ██ ██   ██ ██   ██  ██  ██
+        ██ ████ ██ ██ ██ ██  ██ ██          ██ █████   ██    ██ ██████  ███████ ██████  ██   ██   ████
+        ██  ██  ██ ██ ██  ██ ██ ██     ██   ██ ██      ██    ██ ██      ██   ██ ██   ██ ██   ██    ██
+        ██      ██ ██ ██   ████ ██      █████  ███████  ██████  ██      ██   ██ ██   ██ ██████     ██
+
+                                   ==== MAN vs MACHINE ===
+        ''')
+            print("===CHOOSE DIFFICULTY===")
+            print("1. First Grader - Gets it right ~33% of the time \n2. High Schooler - Gets it right ~60% of the time \n3. BSDSBA BATCH 2027 STUDENT PIONEER - Gets it right ALL THE TIME \n4. PLAYER VS PLAYER")
+        else:
+            #Display Background
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            #Display Logo
+            photo = tk.Label(root, image=Images['logoImage'], bg = ss.COLORS["MONEY_GREEN"])
+            photo.pack(pady=35)
+
+            #Display "Choose Difficulty"
+            textToShow = tk.Label(
+                            text="Please Choose Difficulty",
+                            font=ss.H2["FONT"],
+                            fg=ss.H2["FONT_COLOR"],
+                            bg=ss.H2["BACKGROUND_COLOR"],
+                            )
+            textToShow.pack(padx= 10, pady=10)
+
+            #Display Difficulties
+            HEIGHT = 1
+            WIDTH = 60
+            FirstGradeButton = tk.Button(
+                                text="First Grader - Gets it right ~33% of the time",
+                                command=lambda: update_info_from_menu("FIRST_GRADER", "GAME_INTRO"))
+            HighSchoolerButton = tk.Button(
+                                text="High Schooler - Gets it right ~60% of the time",
+                                command=lambda: update_info_from_menu("HIGH_SCHOOLER", "GAME_INTRO"))
+            PionnerButton = tk.Button(
+                                text="BSDSBA BATCH 2027 STUDENT PIONEER - Gets it right ALL THE TIME",
+                                command=lambda: update_info_from_menu("BSDSBA_PIONEER", "GAME_INTRO"))
+            PVPButton = tk.Button(text="PLAYER VERSUS PLAYER",
+                                command=lambda: update_info_from_menu("PVP", "GAME_INTRO"))
+
+            buttonList = [FirstGradeButton, HighSchoolerButton, PionnerButton, PVPButton]
+            for button in buttonList:
+             buttonIndex = buttonList.index(button)
+             button.configure(
+                            font=ss.OPTION_BUTTONS["FONT"],
+                            height=HEIGHT, width=WIDTH,
+                            bg =ss.OPTION_BUTTONS["BACKGROUND_COLOR"],
+                            fg =ss.OPTION_BUTTONS["FONT_COLOR"])
+            button.pack(pady=2)
+
+            root.mainloop()
+            mixer.quit()
+
+    def process(difficulty, nextScene):
+        ''' 
+        updates currentScene and gameDifficulty variables
+        str, str -> no return value
+        developer-in-charge: mayo
+        '''
+        global gameDifficulty
+        global ENVIRONMENT
+
+        # Changes scene and updates difficulty
+        currentScene = nextScene
+        gameDifficulty = difficulty
+
+        #Change Scene based on Environment
+        if ENVIRONMENT == "COLAB":
+            change_scene_to(nextScene)
+        else:
+            do_game_intro()
 
 
 class QuestionBoardPage(Page):
@@ -307,9 +383,6 @@ class QuestionBoardPage(Page):
     '''
 
     def run():
-        pass
-    
-    def do_question_select():
         '''
         renders the question board, selects a random question if bot's turn
         developer-in-charge: mayo
@@ -320,9 +393,6 @@ class QuestionBoardPage(Page):
             root.after(1500, lambda: update_info_from_question_select('IrrelevantArg', selectedCategory, selectedBid))
 
     def render():
-        pass
-
-    def render_question_board():
         '''
         prints the info for the question board
         Displays button for each question
@@ -351,7 +421,7 @@ class QuestionBoardPage(Page):
             ]
 
             for category in actualQuestions: #loops through the categories
-            for questionInfo in actualQuestions[category]: #loops through the questions per categories
+             for questionInfo in actualQuestions[category]: #loops through the questions per categories
                 questionIndex = actualQuestions[category].index(questionInfo)
                 formattedBid = "$ " + str(questionInfo["value"])    # Text Formatting
                 questionTable[questionIndex].append(formattedBid)   # Adds the bid value to its appropriate list
@@ -360,7 +430,7 @@ class QuestionBoardPage(Page):
 
             # Displayed to add realism
             if (not isPlayerMove) and (gameDifficulty != "PVP"):
-            print("Bot is thinking...")
+             print("Bot is thinking...")
 
         else:
             #FOR NOTEBOOK ENVIRONMENTS
@@ -374,7 +444,7 @@ class QuestionBoardPage(Page):
             # Configure Table
             nameInputFrame = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
             for columns in range(4):
-            nameInputFrame.columnconfigure(columns, weight=1)
+                nameInputFrame.columnconfigure(columns, weight=1)
 
             # Spacer
             northPadding = tk.Frame(root)
@@ -382,7 +452,7 @@ class QuestionBoardPage(Page):
 
             #Display Category Names
             for columns, category in enumerate(categoryHeaders):
-            categoryLabel = tk.Label(
+                categoryLabel = tk.Label(
                                 nameInputFrame,text=category[:-3],
                                 font=ss.H1["FONT"],
                                 height=2,
@@ -392,9 +462,9 @@ class QuestionBoardPage(Page):
 
             #loop Through Categories
             for categoryNum, category in enumerate(actualQuestions):
-            for questionNum, questions in enumerate(actualQuestions[category]): #loops through the questions in category
-                formattedBid = "$" + str(questions["value"])
-                questionSelect = tk.Button(
+                for questionNum, questions in enumerate(actualQuestions[category]): #loops through the questions in category
+                    formattedBid = "$" + str(questions["value"])
+                    questionSelect = tk.Button(
                                         nameInputFrame,
                                         text=formattedBid,
                                         font=ss.BID_CARD["FONT"],
@@ -406,7 +476,7 @@ class QuestionBoardPage(Page):
                 questionSelect.grid(row=questionNum+1, column=(categoryNum)%4, sticky="EW")
 
                 if (formattedBid=="$---" or formattedBid == "$-GOLDEN-$") or ((not isPlayerMove) and (gameDifficulty!="PVP")):
-                questionSelect.configure(state="disabled") #Disabled when already asked OR bot's move
+                    questionSelect.configure(state="disabled") #Disabled when already asked OR bot's move
 
             nameInputFrame.pack(fill="both", pady=5, padx=25)
 
@@ -421,9 +491,9 @@ class QuestionBoardPage(Page):
 
             currentContestant = "HELLO"
             if isPlayerMove:
-            currentContestant = PlayerNames[0]
+                currentContestant = PlayerNames[0]
             else:
-            currentContestant = PlayerNames[1]
+                currentContestant = PlayerNames[1]
 
 
             hostPrompt = tk.Label(
@@ -438,10 +508,7 @@ class QuestionBoardPage(Page):
 
             hostFrame.pack(fill="x", padx=20, pady=20)
     
-    def process():
-        pass
-
-    def update_info_from_question_select(nextScene, questionCategory, questionBidValue):
+    def process(nextScene, questionCategory, questionBidValue):
         '''
         Edits the currentQuestion var to a dict containing the question details
         str, int, str -> no return value
@@ -482,13 +549,129 @@ class QuestionCardPage(Page):
     '''
 
     def run():
-        pass
+        '''
+        renders the question card, accepts bot move
+        developer-in-charge: mayo
+        '''
+        render_question_card()
+        if (not isPlayerMove) and (gameDifficulty!='PVP'): #If bot's move, choose an answer
+            answerStatus = get_bot_answer_to_question_notebook()   # Gets the user's input for the question parameters
+            root.after(1500, lambda: update_info_from_question_showing("IrrelevantArg", answerStatus))
 
     def render():
-        pass
+        '''
+        prints the question and relevant parameters
+        ->no return value
+        developer-in-charge: Cheska
+        '''
+        global currentQuestion
+        global lastBidValue
+        global PlayerNames
+        global ENVIRONMENT
+        global FONT
+        global actualQuestions
+        global root
+        global Images
 
-    def process():
-        pass
+        #Initializing Local Variables
+        questionText = currentQuestion["Question"]
+        questionChoices = currentQuestion["Choices"]
+        questionForWhom = ""
+
+        if isPlayerMove:
+            questionForWhom = PlayerNames[0]
+        else:
+            questionForWhom = PlayerNames[1]
+
+
+        if ENVIRONMENT == "COLAB":
+
+            output.clear()
+
+            # Prints the question, bid value, and choices with formatting
+            print(f"======= {questionForWhom}: For ${lastBidValue} =======")
+            print("QUESTION: ")
+            print(f" {questionText}")
+            print("")
+            print("CHOICES: ")
+            for choice in questionChoices:
+            print(choice)
+            print("")
+
+
+        else: #FOR NOTEBOOK ENVIRONMENTS
+            # Clear Screen
+            clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            #Display Header
+            header = tk.Label(
+                            text=f"======= {questionForWhom}: For ${lastBidValue} =======",
+                            font = ss.H2["FONT"],
+                            fg= ss.H2["FONT_COLOR"],
+                            bg= ss.H2["BACKGROUND_COLOR"])
+            header.pack(pady=45)
+
+            #Display Question
+            header = tk.Label(
+                            text=f"{questionText}",
+                            font = ss.QUESTION_CARD["FONT"],
+                            wraplength=1000, height=4, padx= 30,
+                            fg= ss.QUESTION_CARD["FONT_COLOR"],
+                            bg= ss.QUESTION_CARD["BACKGROUND_COLOR"])
+            header.pack()
+
+            #Spacer
+            spacer = tk.Label(text="", bg=ss.COLORS["MONEY_GREEN"])
+            spacer.pack(pady=10)
+
+            #Display Options
+            for choice in questionChoices:
+                answerButton = tk.Button(text=choice, font=(FONT[0], 20, "bold"), command=lambda answer=choice[0]: get_user_answer_to_question(answer), bg="#F5E6CA", fg="#020024")
+                answerButton.pack(pady=10, fill="x")
+
+            if (not isPlayerMove) and (gameDifficulty!="PVP"):
+                answerButton.configure(state="disabled") #Disabled when bot's move
+
+    def process(nextScene, isAnswerCorrect):
+        '''
+        updates the currentScore is answer is correct
+        -> no return value
+        developer-in-charge: mayo
+        '''
+        global isLastAnswerCorrect
+        global currentPlayerScore
+        global lastBidValue
+        global current
+        global isPlayerMove
+        global currentBotScore
+        global ENVIRONMENT
+
+        # Updates player score
+        if isPlayerMove:
+         if isAnswerCorrect:
+            isLastAnswerCorrect = True
+            currentPlayerScore += lastBidValue
+         else:
+            isLastAnswerCorrect = False
+            currentPlayerScore -= lastBidValue
+        else:
+         if isAnswerCorrect:
+            isLastAnswerCorrect = True
+            currentBotScore += lastBidValue
+         else:
+            isLastAnswerCorrect = False
+            currentBotScore -= lastBidValue
+
+        # Changes Scene based on ENVIRONMENT
+        if ENVIRONMENT == "COLAB":
+            change_scene_to(nextScene)
+        else:
+            do_score_showing()
+
 
 
 class ScoreBoardPage(Page):
@@ -502,13 +685,313 @@ class ScoreBoardPage(Page):
     '''
 
     def run():
-        pass
+        '''
+        check if there are no more questions
+        show score if there are still questions, show winner otherwise
+        developer-in-charge: mayo
+        '''
+
+        check_if_no_more_questions()
+
+        render_player_score()
+        if isGameOngoing:
+            if currentQuestion["isGolden"]:
+                goldenQuestionButton = tk.Button(root, text="Answer a Golden Question", command=lambda: update_info_from_contestants_score("GOLDEN_QUESTION_SHOWING"), font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+                goldenQuestionButton.pack(pady=15)
+            else:
+                endTurnButton = tk.Button(root, text = "End Turn", command=lambda: update_info_from_contestants_score('IrrelevantArg'), font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+                endTurnButton.pack(pady=15)
+        else:
+            endTurnButton = tk.Button(root, text = "End Game", command=root.destroy, font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+            endTurnButton.pack(pady=15)
 
     def render():
-        pass
+        '''
+        prints the scores of both contestants
+        -> no return value
+        developer-in-charge: Cheska
+        '''
+        global currentPlayerScore
+        global previousPlayerScore
+        global currentBotScore
+        global previousBotScore
+        global isLastAnswerCorrect
+        global lastBidValue
+        global isPlayerMove
+        global PlayerNames
+        global ENVIRONMENT
+        global root
+        global FONT
+        global isGameOngoing
+        global Images
+        global Sounds
+
+
+
+        # Text Formatting
+        currentPlayerScoreAsText = format_text_to_constant_width(str(currentPlayerScore), 5)
+        previousPlayerScoreAsText = format_text_to_constant_width(str(previousPlayerScore), 5)
+        playerScoreDeltaAsText = format_text_to_constant_width(str(abs(currentPlayerScore - previousPlayerScore)),5)
+
+        if currentPlayerScore - previousPlayerScore >0:
+            playerScoreDeltaAsText = "+"+playerScoreDeltaAsText # NOTE: += is not applicable here because concat is not associative
+        else:
+            playerScoreDeltaAsText = "-"+playerScoreDeltaAsText
+
+        currentBotScoreAsText = format_text_to_constant_width(str(currentBotScore), 5)
+        previousBotScoreAsText = format_text_to_constant_width(str(previousBotScore), 5)
+        botScoreDeltaAsText = format_text_to_constant_width(str((abs(currentBotScore - previousBotScore))), 5)
+
+        if currentBotScore - previousBotScore >0:
+            botScoreDeltaAsText = "+"+botScoreDeltaAsText # NOTE: += is not applicable here because concat is not associative
+        else:
+            botScoreDeltaAsText = "-"+botScoreDeltaAsText
+
+        scoreOperand = "+"
+        currentContestant = ""
+        answerStatus = ""
+
+        # Sets the appropriate Contestant, scoreOperand, and answer status based on
+        # whose turn it is and whether the last answer was correct
+
+        if isPlayerMove:
+            currentContestant = PlayerNames[0]
+        else:
+            currentContestant = PlayerNames[1]
+
+        if isLastAnswerCorrect:
+            scoreOperand = "+"
+            answerStatus = "got it CORRECT!"
+        else:
+            scoreOperand = "-"
+            answerStatus = "got it WRONG!"
+
+
+
+        if ENVIRONMENT == "COLAB":
+
+            output.clear()
+
+            # Prints the scoreboard
+            print(
+            f'''{PlayerNames[0]}     {PlayerNames[1]}
+        ☻☻☻☻☻     ○○○○○
+        ☻☻☻☻☻     ○○○○○
+        ☻☻☻☻☻     ○○○○○
+        ████████   ████████
+        █ {previousPlayerScoreAsText}█   █ {previousBotScoreAsText}█
+        █{playerScoreDeltaAsText}█   █{botScoreDeltaAsText}█
+        █ ──── █   █ ──── █
+        █ {currentPlayerScoreAsText}█   █ {currentBotScoreAsText}█
+        █      █   █      █''')
+
+            print("=======================")
+            print(f"{currentContestant} {answerStatus}")
+
+        else: #FOR NOTEBOOK ENVIRONMENTS
+            DARK_GREEN = ss.COLORS["DARK_MONEY_GREEN"]
+
+            # Clear Screen
+            clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            # Spacer
+            northPadding = tk.Frame()
+            northPadding.pack(pady=25)
+
+
+            #Setup score board
+            frame = tk.Frame(root, bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+            frame.columnconfigure(0, weight=10) # Player 1 column
+            frame.columnconfigure(1, weight=1)
+            frame.columnconfigure(2, weight=10) # Player 2 column
+
+            # Determines the icon sprite to be used
+            iconNumPlayer1 = 4
+            if currentPlayerScore<0:
+                iconNumPlayer1=0
+            elif currentPlayerScore<1000:
+                iconNumPlayer1=1
+            elif currentPlayerScore<2000:
+                iconNumPlayer1=2
+            elif currentPlayerScore<3000:
+                iconNumPlayer1=3
+
+            iconNumPlayer2 = 4
+            if currentBotScore<0:
+                iconNumPlayer2=0
+            elif currentBotScore<1000:
+                iconNumPlayer2=1
+            elif currentBotScore<2000:
+                iconNumPlayer2=2
+            elif currentBotScore<3000:
+                iconNumPlayer2=3
+
+
+            #Player1Frame
+            player1Frame = tk.Frame(frame, bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+            player1Name = tk.Label(
+                                text= PlayerNames[0],
+                                master=player1Frame,
+                                font=ss.H1["FONT"],
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.COLORS["TEXT_WHITE"])
+            player1Score = tk.Label(
+                                text= str(currentPlayerScore),
+                                master=player1Frame,
+                                font=ss.H1["FONT"],
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.COLORS["ACCENT_GOLD"])
+            player1Status = tk.Label(player1Frame, image=Images[f'level{iconNumPlayer1}_player1'], bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+            player1Name.pack(fill="x", expand=True)
+            player1Score.pack(fill="x", expand=True)
+            player1Status.pack(fill="x", expand=True)
+            player1Frame.grid(column=0, row=0,ipadx=10, sticky=tk.W+tk.E)
+
+            #Spacer
+            spacerFrame = tk.Frame(frame, bg=ss.COLORS["MONEY_GREEN"],)
+            spacer = tk.Label(
+                                text= "",
+                                master=spacerFrame,
+                                font=ss.H1["FONT"],
+                                bg=ss.COLORS["MONEY_GREEN"],
+                                fg=ss.COLORS["TEXT_WHITE"])
+            spacer.pack()
+            spacerFrame.grid(column=1, row=0, sticky=tk.W+tk.E+tk.N+tk.S)
+
+
+            #Player2Frame
+            player2Frame = tk.Frame(frame, bg=ss.COLORS["DARK_MONEY_GREEN"],)
+            player2Name = tk.Label(
+                                text= PlayerNames[1],
+                                master=player2Frame,
+                                font=ss.H1["FONT"],
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.COLORS["TEXT_WHITE"])
+            player2Score = tk.Label(
+                                text= str(currentBotScore),
+                                master=player2Frame,
+                                font=ss.H1["FONT"],
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.COLORS["ACCENT_GOLD"])
+            player2Status = tk.Label(player2Frame, image=Images[f'level{iconNumPlayer2}_player2'], bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+            player2Name.pack(fill="x", expand=True)
+            player2Score.pack(fill="x", expand=True)
+            player2Status.pack(fill="x", expand=True)
+            player2Frame.grid(column=2, row=0, sticky=tk.W+tk.E)
+
+            frame.pack(fill="x", padx=30, pady=30, ipadx=10)
+
+
+            # Additional Info
+            additionalInfoFrame = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            additionalInfoFrame.columnconfigure(0, weight=1) # For Host Sprite
+            additionalInfoFrame.columnconfigure(1, weight=3) # For Answer Status
+            additionalInfoFrame.columnconfigure(2, weight=1) # For Spacing
+            additionalInfoFrame.columnconfigure(3, weight=1) # For Delta Scores
+            additionalInfoFrame.pack(fill="x", padx=30)
+
+            # Bottom Spacer
+            spacerBottomFrame = tk.Frame(additionalInfoFrame, bg=ss.COLORS["MONEY_GREEN"],)
+            spacerBottom = tk.Label(
+                                text= "",
+                                master=spacerFrame,
+                                font=ss.H1["FONT"],
+                                bg=ss.COLORS["MONEY_GREEN"],
+                                fg=ss.COLORS["TEXT_WHITE"])
+            spacerBottom.pack()
+            spacerBottomFrame.grid(column=2, row=0, sticky=tk.W+tk.E+tk.N+tk.S)
+
+
+
+            host = tk.Label(additionalInfoFrame,image = Images["host"], bg=ss.COLORS["HIGHLIGHT_YELLOW"], borderwidth=1)
+            host.grid(column=0, row=0, sticky="w")
+
+            if isGameOngoing:
+                questionStatus = tk.Label(
+                                text= f"{currentContestant} {answerStatus}",
+                                master=additionalInfoFrame,
+                                font=ss.H1["FONT"],
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.COLORS["ACCENT_GOLD"],
+                                justify="left")
+                questionStatus.grid(column=1, row=0, sticky="w")
+                if isLastAnswerCorrect:
+                    winSound = choice(Sounds["correct"])
+                    mixer.Channel(1).play(mixer.Sound(winSound))
+                else:
+                    loseSound = choice(Sounds["wrong"])
+                    mixer.Channel(1).play(mixer.Sound(loseSound))
+            else:
+                winner = ""
+                if currentPlayerScore > currentBotScore:
+                    winner = f"{PlayerNames[0]} WON!"
+                    mixer.Channel(1).play(mixer.Sound("Player1Won.wav"))
+                elif currentPlayerScore == currentBotScore:
+                    winner = "IT'S A TIE"
+                else:
+                    winner = f"{PlayerNames[1]} WON!"
+                    mixer.Channel(1).play(mixer.Sound("Player2Won.wav"))
+                questionStatus = tk.Label(
+                                text= f"{winner}",
+                                master=additionalInfoFrame,
+                                font=ss.H1["FONT"],
+                                bg=ss.H1["BACKGROUND_COLOR"],
+                                fg=ss.COLORS["ACCENT_GOLD"],
+                                justify="left")
+                questionStatus.grid(column=1, row=0, sticky="w")
+
+            questionStatus = tk.Label(
+                                text= f'''{PlayerNames[0]}: {playerScoreDeltaAsText} \n {PlayerNames[1]}: {botScoreDeltaAsText}''',
+                                master=additionalInfoFrame,
+                                font=ss.H2["FONT"],
+                                bg=ss.COLORS["TEXT_WHITE"],
+                                fg=ss.COLORS["TEXT_BLACK"])
+            questionStatus.grid(column=3, row=0)
+
 
     def process():
-        pass
+        '''
+        changes whose turn it is and updates previousScore variable
+        -> no return value
+        developer-in-charge: mayo
+        '''
+        global currentPlayerScore
+        global previousPlayerScore
+        global isPlayerMove
+        global currentScene
+        global previousBotScore
+        global currentBotScore
+        global currentQuestion
+        global goldenQuestions
+        global ENVIRONMENT
+
+        # Switch Turns
+        if nextScene != "GOLDEN_QUESTION_SHOWING":
+            if isPlayerMove:
+                isPlayerMove = False
+            else:
+                isPlayerMove = True
+        else:
+            currentQuestion = choice(goldenQuestions)
+            goldenQuestions.pop(goldenQuestions.index(currentQuestion))
+            currentQuestion["isGolden"] = False
+
+
+        previousPlayerScore = currentPlayerScore
+        previousBotScore = currentBotScore
+        # Changes Scene based on ENVIRONMENT:
+        if ENVIRONMENT=="COLAB":
+            change_scene_to(nextScene)
+        else:
+            if nextScene == "GOLDEN_QUESTION_SHOWING":
+                do_golden_question()
+            else:
+                do_question_select()
+
 
 
 class EndPage(Page):
@@ -542,13 +1025,111 @@ class GoldenQuestion(Page):
     '''
 
     def run():
-        pass
+        '''
+        renders the golden question, allows bot to move
+        developer-in-charge: mayo
+        '''
+        render_golden_question_card()
+        if (not isPlayerMove) and (gameDifficulty!='PVP'): #If bot's move, choose an answer
+            answerStatus = get_bot_answer_to_question_notebook()   # Gets the user's input for the question parameters
+            root.after(1500, lambda: update_info_from_golden_question_showing("IrrelevantArg", answerStatus))
 
     def render():
-        pass
+        '''
+        prints the golden question and relevant parameters
+        ->no return value
+        developer-in-charge: Cheska
+        '''
+        global currentQuestion
+        global PlayerNames
+        global ENVIRONMENT
+        global Images
+
+        questionText = currentQuestion["Question"]
+        questionChoices = currentQuestion["Choices"]
+
+        if isPlayerMove:
+            questionForWhom = PlayerNames[0]
+        else:
+            questionForWhom = PlayerNames[1]
+
+        if ENVIRONMENT == "COLAB":
+            output.clear()
+
+            # Prints the question, bid value, and choices with formatting
+            print(f"======={questionForWhom}: GOLDEN QUESTION =======")
+            print("QUESTION: ")
+            print(f" {questionText}")
+            print("")
+            print("CHOICES: ")
+            for choice in questionChoices:
+                print(choice)
+            print("")
+
+        else: #FOR NOTEBOOK ENVIRONMENTS
+            # Clear Screen
+            clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            #Display Header
+            header = tk.Label(
+                            text=f"======= For {questionForWhom}: GOLDEN QUESTION =======",
+                            font = ss.H2["FONT"],
+                            fg= ss.H2["FONT_COLOR"],
+                            bg= ss.H2["BACKGROUND_COLOR"])
+            header.pack(pady=45)
+
+            #Display Question
+            header = tk.Label(text=f" {questionText}", font = (FONT[0], 30), wraplength=1000, height=4, bg="#F5E6CA", fg="#343F56")
+            header.pack(pady=5)
+
+            #Spacer
+            spacer = tk.Frame()
+            spacer.pack(pady=5)
+
+            #Display Options
+            for choice in questionChoices:
+                answerButton = tk.Button(text=choice, font=(FONT[0], 20), command=lambda answer=choice[0]: get_user_answer_to_question(answer, True))
+                answerButton.pack(pady=10, fill="x")
+
+            if (not isPlayerMove) and (gameDifficulty!="PVP"):
+                answerButton.configure(state="disabled") #Disabled when bot's move
 
     def process():
-        pass
+        '''
+        updates the currentScore is answer is correct
+        -> no return value
+        developer-in-charge: mayo
+        '''
+        global isLastAnswerCorrect
+        global currentPlayerScore
+        global lastBidValue
+        global current
+        global isPlayerMove
+        global currentBotScore
+        global currentQuestion
+
+        isLastAnswerCorrect = isAnswerCorrect
+        # Updates player score
+        if isPlayerMove:
+            if isAnswerCorrect:
+                isLastAnswerCorrect = True
+                currentPlayerScore += abs(currentBotScore//2)
+                currentBotScore -= abs(currentBotScore//2)
+        else:
+            if isAnswerCorrect:
+                isLastAnswerCorrect = True
+                currentBotScore += abs(currentPlayerScore//2)
+                currentPlayerScore -= abs(currentPlayerScore//2)
+
+        # Changes Scene based on Environment
+        if ENVIRONMENT == "COLAB":
+            change_scene_to(nextScene)
+        else:
+            do_score_showing()
 
 
 # Agent Classes -----------------------------
