@@ -595,8 +595,8 @@ class QuestionCardPage(Page):
             print("")
             print("CHOICES: ")
             for choice in questionChoices:
-            print(choice)
-            print("")
+                print(choice)
+                print("")
 
 
         else: #FOR NOTEBOOK ENVIRONMENTS
