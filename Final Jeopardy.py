@@ -96,7 +96,7 @@ Sounds = {
 
 # Play Background Music
 mixer.init()
-mixer.Channel(0).play(mixer.Sound("bgm.wav"), loops=-1)
+
 
 goldenQuestions=[ #Added by Cheska
     {"Question":"Which Disney Princess has the least amount of screen time?",
@@ -134,11 +134,13 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
-    stage = 2
-
+    stage = 1
+    musicTrack = ["bgm.wav","bgm.wav","bgm.wav", "bgm.wav"]
+    current = "Default"
     actualQuestions={}
 
     def __init__(self):
+        print(GameState.musicTrack)
         self.set_actual_questions()
         self.gameDifficulty: str = "FIRST_GRADE"
         self.playerNames: list[str] = ["Player", "Mr.Irdller"]
@@ -150,6 +152,8 @@ class GameState():
         self.previousBotScore = 0
         self.isLastAnswerCorrect = False
         self.isGameOngoing= True
+
+        mixer.Channel(0).play(mixer.Sound(GameState.musicTrack[GameState.stage-1]), loops=-1)
 
         self.mediator = self.initialize_mediator()
 
@@ -405,6 +409,27 @@ class IntroPage(Page):
                                 fg=ss.PRIMARY_BUTTON["FONT_COLOR"])
             startButton.pack()
 
+
+    def change_audio(self, gameState, audioButton):
+        tracks = {
+            "default":["bgm.wav", "bgm.wav", "bgm.wav", "bgm.wav"],
+            "Paolo":["bgm.wav", "bgm.wav", "bgm.wav", "bgm.wav"],
+            "Cheska":["bgm.wav", "MK.wav", "LM.wav", "overworld.wav"],
+        }
+
+        if GameState.current == "Default":
+            GameState.musicTrack = tracks["Paolo"]
+            GameState.current = "Paolo"
+        elif GameState.current == "Paolo":
+            GameState.musicTrack = tracks["Cheska"]
+            GameState.current = "Cheska"
+        elif GameState.current == "Cheska":
+            GameState.musicTrack = tracks["default"]
+            GameState.current = "Default"
+        
+        audioButton.configure(text=f"{GameState.current}: Current Track")
+        print(GameState.current, GameState.musicTrack)
+        
     def render_story(self, gameState):
         global root
         global FONT
@@ -415,6 +440,13 @@ class IntroPage(Page):
 
         if stage == 1:
             self.render(gameState)
+            audioButton = tk.Button(
+                                text="Audio Track: Default",
+                                command = lambda: self.change_audio(gameState, audioButton),
+                                font=ss.PRIMARY_BUTTON["FONT"],
+                                bg=ss.PRIMARY_BUTTON["BACKGROUND_COLOR"],
+                                fg=ss.PRIMARY_BUTTON["FONT_COLOR"])
+            audioButton.pack()
         elif stage == 2:
             # Clear Screen
             self.clear_notebook_screen()
@@ -1681,7 +1713,7 @@ class EndPage(Page):
         gameDifficulty = gameState.gameDifficulty
         stage = gameState.stage
 
-        if gameDifficulty == "STORY MODE" and isPlayerWon:
+        if gameDifficulty == "STORY MODE":
             endTurnButton = tk.Button(root, text = "Continue Story", command= lambda state=gameState: self.next_story(gameState), font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
             endTurnButton.pack(pady=10)
         else:
