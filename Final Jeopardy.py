@@ -23,7 +23,7 @@ Note For Other Developers:
 #Built-in
 from abc import ABC, abstractmethod
 import tkinter as tk
-from random import choice, sample
+from random import choice, sample, randint
 from os import chdir
 from sys import path
 
@@ -98,13 +98,43 @@ Sounds = {
 
 # Play Background Music
 mixer.init()
-mixer.Channel(0).play(mixer.Sound("bgm.wav"), loops=-1)
+#mixer.Channel(0).play(mixer.Sound("bgm.wav"), loops=-1)
+
+goldenQuestions=[ #Added by Cheska
+    {"Question":"Which Disney Princess has the least amount of screen time?",
+      "Choices":["a) Aurora from Sleeping Beauty", "b) Ariel from the Little Mermaid", "c) Mulan from Mulan", "d) Merida from Brave"],
+     "Answer":"a"},
+    {"Question":"Roughly how long does it take for the sun's light to reach Earth?",
+       "Choices":["a) 24 minutes", "b) 15 hours", "c) 8 minutes", "d) 49 seconds"],
+     "Answer":"c"},
+    {"Question":"Where in the human body would you find the medulla oblongata?",
+      "Choices":["a) Heart", "b) Lungs", "c) Stomach", "d) Brain"],
+     "Answer":"d"},
+    {"Question":"What was the name of the international group formed to maintain world peace after World War I?",
+      "Choices":["a) NATO", "b) The League of Nations", "c) United Nations", "d) Allies"],
+     "Answer":"b"},
+    {"Question":"Which English city was once known as Duroliponte?",
+      "Choices":["a) Cambridge", "b) Salisbury", "c) London", "d) Brighton"],
+     "Answer":"a"},
+     {"Question":"Who was the co-ruler of King Leonidas of Sparta?",
+      "Choices":["a) Anaxandrides", "b) Leotychidas II", "c) Darius", "d) Agis II"],
+     "Answer":"b"},
+     {"Question":"What is Shakespeare's shortest play?",
+      "Choices":["a) Romeo and Juliet", "b) Hamlet", "c) The Merchant of Venice", "d) The Comedy of Errors"],
+     "Answer":"d"},
+     {"Question":"In terms of volume, which is the largest fresh lake in the world?",
+      "Choices":["a) Lake Michigan", "b) Lake Baikal", "c) Lake Victoria", "d) Great Bear Lake"],
+     "Answer":"b"},
+     {"Question":"How many episodes of Keeping Up with the Kardashians are there?",
+      "Choices":["a) 280", "b) 317", "c) 198", "d) 143"],
+     "Answer":"a"},
+]
 
 #############################################
 # Class Declarations                        #
 #############################################
 
-# Game State Data ---------------------------
+# Data Classes---------------------------
 class GameState():
 
 
@@ -155,13 +185,12 @@ class GameState():
                 #Attach a Flag to keep track of asked questions
                 question["isAlreadyAsked"] = False
 
-                # Sets one question in the category as golden
-                choice(randomQuestions)["isGolden"] = True
+            # Sets one question in the category as golden
+            choice(randomQuestions)["isGolden"] = True
 
             questionList[category]=(randomQuestions)   # Updates the global variable based on generated random questions
 
         cls.actualQuestions = questionList
-
 
 # Page Classes ------------------------------
 class Page(ABC):
@@ -489,8 +518,40 @@ class QuestionBoardPage(Page):
         '''
         self.render(gameState)
         if (not gameState.isPlayerMove) and (gameState.gameDifficulty!='PVP'): #If bot's move, choose a question randomly
-            selectedCategory, selectedBid = get_bot_chosen_question()   # Gets the user's input for the question parameters
+            selectedCategory, selectedBid = self.get_bot_chosen_question(gameState)   # Gets the user's input for the question parameters
             root.after(1500, lambda: self.process('IrrelevantArg', selectedCategory, selectedBid, gameState))
+
+    def get_bot_chosen_question(self, gameState):
+        '''
+        returns a random question when run from a notebook
+        ->returns the input as a tuple(chosenCategory:int, BidValue:str)
+        developer-in-charge: Chloe
+        '''
+        hasValidInputs = False
+
+        while not hasValidInputs: # This loops until a valid input is given
+            chosenCategory = choice(["1", "2", "3", "4"])
+            chosenBidValue= choice(["200", "400", "600", "800"])
+
+            #Checks the validity of player input. Loops again if input is invalid
+            if (not self.check_if_valid_input(chosenCategory,["1", "2", "3", "4"])) or (not self.check_if_valid_input(chosenBidValue,["200", "400", "600", "800"])):
+                pass
+            else:
+                if not self.get_question(int(chosenCategory), chosenBidValue, gameState)["isAlreadyAsked"]:
+                    hasValidInputs = True
+
+        return int(chosenCategory), chosenBidValue
+
+    def check_if_valid_input(self, input, allowedValues):
+        '''
+        Checks if input is allowed
+        array element, array -> returns a boolean value (returns True if allowed, else returns False)
+        developer-in-charge: mayo
+        '''
+        for value in allowedValues: # Loops through all allowed values
+            if input==value: # Check if input matches one of the allowed values, returns True if true
+                print(input, value) # Prints the input and value for debugging, should be the same
+                return True
 
     def render(self, gameState):
         '''
@@ -546,8 +607,9 @@ class QuestionBoardPage(Page):
                                     bg=ss.BID_CARD["BACKGROUND_COLOR"])
                 questionSelect.grid(row=questionNum+1, column=(categoryNum)%4, sticky="EW")
 
-            if (formattedBid=="$---" or formattedBid == "$-GOLDEN-$") or ((not isPlayerMove) and (gameDifficulty!="PVP")):
-                questionSelect.configure(state="disabled") #Disabled when already asked OR bot's move
+                if (formattedBid=="$---" or formattedBid == "$-GOLDEN-$") or ((not isPlayerMove) and (gameDifficulty!="PVP")):
+                    questionSelect.configure(state="disabled") #Disabled when already asked OR bot's move
+                
 
             nameInputFrame.pack(fill="both", pady=5, padx=25)
 
@@ -635,9 +697,37 @@ class QuestionCardPage(Page):
         developer-in-charge: mayo
         '''
         self.render(gameState)
-        if (not isPlayerMove) and (gameDifficulty!='PVP'): #If bot's move, choose an answer
-            answerStatus = get_bot_answer_to_question_notebook()   # Gets the user's input for the question parameters
-            root.after(1500, lambda: self.process("IrrelevantArg", answerStatus))
+        if (not gameState.isPlayerMove) and (gameState.gameDifficulty!='PVP'): #If bot's move, choose an answer
+            answerStatus = self.get_bot_answer_to_question(gameState)   # Gets the user's input for the question parameters
+            root.after(1500, lambda: self.process(answerStatus, gameState))
+
+    def get_bot_answer_to_question(self, gameState):
+        '''
+        gets bot input to question
+        ->returns a boolean (True if answer is correct, else False)
+        developer-in-charge: AJ
+        '''
+        print(gameState)
+        gameDifficulty = gameState.gameDifficulty
+
+        # In PVP, get player answer
+        if gameDifficulty == "PVP":
+            return self.get_user_answer_to_question()
+
+        # In the hardest difficulty, the bot is always correct
+        if gameDifficulty == "BSDSBA_PIONEER":
+            return True
+
+        #"Rolls a 100-sided die"
+        d100 = randint(1, 100)
+        successTreshhold = 0
+
+        if gameDifficulty == "FIRST_GRADER":
+            successTreshhold = 33 # The dice has to match or roll below this to succeed (~33% chance)
+        else:
+            successTreshhold = 60 # The dice has to match or roll below this to succeed (~66% chance)
+
+        return d100 <= successTreshhold # Evaluates to either True or False (see previous 2 comments)
 
     def render(self, gameState):
         '''
@@ -650,6 +740,7 @@ class QuestionCardPage(Page):
         playerNames = gameState.playerNames
         actualQuestions = gameState.actualQuestions
         isPlayerMove = gameState.isPlayerMove
+        gameDifficulty = gameState.gameDifficulty
         global FONT
         global root
         global Images
@@ -698,8 +789,8 @@ class QuestionCardPage(Page):
             answerButton = tk.Button(text=choice, font=(FONT[0], 20, "bold"), command=lambda answer=choice[0]: self.get_user_answer_to_question(answer, gameState), bg="#F5E6CA", fg="#020024")
             answerButton.pack(pady=10, fill="x")
 
-        if (not isPlayerMove) and (gameDifficulty!="PVP"):
-            answerButton.configure(state="disabled") #Disabled when bot's move
+            if (not isPlayerMove) and (gameDifficulty!="PVP"):
+                answerButton.configure(state="disabled") #Disabled when bot's move
 
     def get_user_answer_to_question(self, userAnswer, gameState):
         '''
@@ -721,7 +812,6 @@ class QuestionCardPage(Page):
         -> no return value
         developer-in-charge: mayo
         '''
-
         isPlayerMove = gameState.isPlayerMove
         lastBidValue = gameState.lastBidValue
 
@@ -737,7 +827,7 @@ class QuestionCardPage(Page):
          else:
             gameState.currentBotScore -= lastBidValue
 
-        isLastAnswerCorrect=isAnswerCorrect
+        gameState.isLastAnswerCorrect=isAnswerCorrect
 
         scoreBoard = ScoreBoardPage()
         self.change_page(scoreBoard, gameState)
@@ -995,12 +1085,12 @@ class ScoreBoardPage(Page):
         else:
             winner = ""
             if currentPlayerScore > currentBotScore:
-                winner = f"{PlayerNames[0]} WON!"
+                winner = f"{playerNames[0]} WON!"
                 mixer.Channel(1).play(mixer.Sound("Player1Won.wav"))
             elif currentPlayerScore == currentBotScore:
                 winner = "IT'S A TIE"
             else:
-                winner = f"{PlayerNames[1]} WON!"
+                winner = f"{playerNames[1]} WON!"
                 mixer.Channel(1).play(mixer.Sound("Player2Won.wav"))
             questionStatus = tk.Label(
                             text= f"{winner}",
@@ -1036,7 +1126,7 @@ class ScoreBoardPage(Page):
             else:
                 gameState.isPlayerMove = True
         else:
-            gameState.currentQuestion = choice(goldenQuestions)
+            currentQuestion = choice(goldenQuestions)
             goldenQuestions.pop(goldenQuestions.index(currentQuestion))
             gameState.currentQuestion["isGolden"] = False
 
@@ -1046,13 +1136,158 @@ class ScoreBoardPage(Page):
         # Changes Scene based on ENVIRONMENT:
 
         if isGoldenQuestion:
-            pass
-            #do_golden_question()
+            goldenQuestion = GoldenQuestionPage()
+            self.change_page(goldenQuestion, gameState)
         else:
             questionBoard = QuestionBoardPage()
             self.change_page(questionBoard, gameState)
 
 
+class GoldenQuestionPage(Page):
+    '''
+    displays the golden question
+    developer-in-charge: samonte
+
+    Attributes
+    ----------
+    None: None
+    '''
+
+    def run(self, gameState):
+        '''
+        renders the golden question, allows bot to move
+        developer-in-charge: mayo
+        '''
+        self.render(gameState)
+        if (not gameState.isPlayerMove) and (gameState.gameDifficulty!='PVP'): #If bot's move, choose an answer
+            answerStatus = self.get_bot_answer_to_question(gameState)   # Gets the user's input for the question parameters
+            root.after(1500, lambda: self.process(answerStatus, gameState))
+
+    
+    def get_bot_answer_to_question(self, gameState):
+        '''
+        gets bot input to question
+        ->returns a boolean (True if answer is correct, else False)
+        developer-in-charge: AJ
+        '''
+        gameDifficulty = gameState.gameDifficulty
+        global ENVIRONMENT
+
+        # In PVP, get player answer
+        if gameDifficulty == "PVP":
+            return self.get_user_answer_to_question()
+
+        # In the hardest difficulty, the bot is always correct
+        if gameDifficulty == "BSDSBA_PIONEER":
+            return True
+
+        #"Rolls a 100-sided die"
+        d100 = randint(1, 100)
+        successTreshhold = 0
+
+        if gameDifficulty == "FIRST_GRADER":
+            successTreshhold = 33 # The dice has to match or roll below this to succeed (~33% chance)
+        else:
+            successTreshhold = 60 # The dice has to match or roll below this to succeed (~66% chance)
+
+        return d100 <= successTreshhold # Evaluates to either True or False (see previous 2 comments)
+
+
+    def render(self, gameState):
+        '''
+        prints the golden question and relevant parameters
+        ->no return value
+        developer-in-charge: Cheska
+        '''
+        currentQuestion = gameState.currentQuestion
+        playerNames = gameState.playerNames
+        isPlayerMove = gameState.isPlayerMove
+        global Images
+
+        questionText = currentQuestion["Question"]
+        questionChoices = currentQuestion["Choices"]
+
+        if isPlayerMove:
+            questionForWhom = playerNames[0]
+        else:
+            questionForWhom = playerNames[1]
+
+        # Clear Screen
+        self.clear_notebook_screen()
+
+        # Display Bacground Image
+        background = tk.Label(root,image = Images['backgroundImage'])
+        background.place(x=0, y=0)
+
+        #Display Header
+        header = tk.Label(
+                        text=f"======= For {questionForWhom}: GOLDEN QUESTION =======",
+                        font = ss.H2["FONT"],
+                        fg= ss.H2["FONT_COLOR"],
+                        bg= ss.H2["BACKGROUND_COLOR"])
+        header.pack(pady=45)
+
+        #Display Question
+        header = tk.Label(text=f" {questionText}", font = (FONT[0], 30), wraplength=1000, height=4, bg="#F5E6CA", fg="#343F56")
+        header.pack(pady=5)
+
+        #Spacer
+        spacer = tk.Frame()
+        spacer.pack(pady=5)
+
+        #Display Options
+        for choice in questionChoices:
+            answerButton = tk.Button(text=choice, font=(FONT[0], 20), command=lambda answer=choice[0]: self.get_user_answer_to_question(answer, gameState))
+            answerButton.pack(pady=10, fill="x")
+
+            if (not gameState.isPlayerMove) and (gameState.gameDifficulty!="PVP"):
+                answerButton.configure(state="disabled") #Disabled when bot's move
+
+    def get_user_answer_to_question(self, notebookAnswer, gameState):
+        '''
+        gets user input to question
+        ->returns a boolean (True if answer is correct, else False)
+        developer-in-charge: Sam
+        '''
+
+        currentQuestion = gameState.currentQuestion
+        global ENVIRONMENT
+
+        rightAnswer = currentQuestion["Answer"]
+
+        isAnswerCorrect = notebookAnswer==rightAnswer
+        
+        self.process(isAnswerCorrect, gameState)
+
+
+    def process(self, isAnswerCorrect, gameState):
+        '''
+        updates the currentScore is answer is correct
+        -> no return value
+        developer-in-charge: mayo
+        '''
+        isLastAnswerCorrect = gameState.isLastAnswerCorrect
+        currentPlayerScore = gameState.currentPlayerScore
+        lastBidValue = gameState.lastBidValue
+        isPlayerMove = gameState.isPlayerMove
+        currentBotScore= gameState.currentBotScore
+        currentQuestion = gameState.currentQuestion
+
+        isLastAnswerCorrect = isAnswerCorrect
+        # Updates player score
+        if isPlayerMove:
+            if isAnswerCorrect:
+                gameState.isLastAnswerCorrect = True
+                gameState.currentPlayerScore += abs(currentBotScore//2)
+                gameState.currentBotScore -= abs(currentBotScore//2)
+        else:
+            if isAnswerCorrect:
+                gameState.isLastAnswerCorrect = True
+                gameState.currentBotScore += abs(currentPlayerScore//2)
+                gameState.currentPlayerScore -= abs(currentPlayerScore//2)
+
+        scoreBoard = ScoreBoardPage()
+        self.change_page(scoreBoard, gameState)
 
 
 
@@ -1076,144 +1311,6 @@ class EndPage(Page):
         pass
 
 
-class GoldenQuestion(Page):
-    '''
-    displays the golden question
-    developer-in-charge: samonte
-
-    Attributes
-    ----------
-    None: None
-    '''
-
-    def run():
-        '''
-        renders the golden question, allows bot to move
-        developer-in-charge: mayo
-        '''
-        render_golden_question_card()
-        if (not isPlayerMove) and (gameDifficulty!='PVP'): #If bot's move, choose an answer
-            answerStatus = get_bot_answer_to_question_notebook()   # Gets the user's input for the question parameters
-            root.after(1500, lambda: update_info_from_golden_question_showing("IrrelevantArg", answerStatus))
-
-    def render():
-        '''
-        prints the golden question and relevant parameters
-        ->no return value
-        developer-in-charge: Cheska
-        '''
-        global currentQuestion
-        global PlayerNames
-        global ENVIRONMENT
-        global Images
-
-        questionText = currentQuestion["Question"]
-        questionChoices = currentQuestion["Choices"]
-
-        if isPlayerMove:
-            questionForWhom = PlayerNames[0]
-        else:
-            questionForWhom = PlayerNames[1]
-
-        if ENVIRONMENT == "COLAB":
-            output.clear()
-
-            # Prints the question, bid value, and choices with formatting
-            print(f"======={questionForWhom}: GOLDEN QUESTION =======")
-            print("QUESTION: ")
-            print(f" {questionText}")
-            print("")
-            print("CHOICES: ")
-            for choice in questionChoices:
-                print(choice)
-            print("")
-
-        else: #FOR NOTEBOOK ENVIRONMENTS
-            # Clear Screen
-            clear_notebook_screen()
-
-            # Display Bacground Image
-            background = tk.Label(root,image = Images['backgroundImage'])
-            background.place(x=0, y=0)
-
-            #Display Header
-            header = tk.Label(
-                            text=f"======= For {questionForWhom}: GOLDEN QUESTION =======",
-                            font = ss.H2["FONT"],
-                            fg= ss.H2["FONT_COLOR"],
-                            bg= ss.H2["BACKGROUND_COLOR"])
-            header.pack(pady=45)
-
-            #Display Question
-            header = tk.Label(text=f" {questionText}", font = (FONT[0], 30), wraplength=1000, height=4, bg="#F5E6CA", fg="#343F56")
-            header.pack(pady=5)
-
-            #Spacer
-            spacer = tk.Frame()
-            spacer.pack(pady=5)
-
-            #Display Options
-            for choice in questionChoices:
-                answerButton = tk.Button(text=choice, font=(FONT[0], 20), command=lambda answer=choice[0]: get_user_answer_to_question(answer, True))
-                answerButton.pack(pady=10, fill="x")
-
-            if (not isPlayerMove) and (gameDifficulty!="PVP"):
-                answerButton.configure(state="disabled") #Disabled when bot's move
-
-    def get_user_answer_to_question(notebookAnswer = "", isGolden=False):
-        '''
-        gets user input to question
-        ->returns a boolean (True if answer is correct, else False)
-        developer-in-charge: Sam
-        '''
-
-        global currentQuestion
-        global ENVIRONMENT
-
-        rightAnswer = currentQuestion["Answer"]
-
-        if ENVIRONMENT == "COLAB":
-            userAnswer = input("Enter letter of your answer (ex. 'a'): ")
-            return userAnswer==rightAnswer
-        else: #If Notebook:
-            isAnswerCorrect = notebookAnswer==rightAnswer
-            if isGolden:
-                update_info_from_golden_question_showing('IrrelevantArg', isAnswerCorrect)
-            else:
-                update_info_from_question_showing("IrrelevantArg", isAnswerCorrect)
-
-    def process():
-        '''
-        updates the currentScore is answer is correct
-        -> no return value
-        developer-in-charge: mayo
-        '''
-        global isLastAnswerCorrect
-        global currentPlayerScore
-        global lastBidValue
-        global current
-        global isPlayerMove
-        global currentBotScore
-        global currentQuestion
-
-        isLastAnswerCorrect = isAnswerCorrect
-        # Updates player score
-        if isPlayerMove:
-            if isAnswerCorrect:
-                isLastAnswerCorrect = True
-                currentPlayerScore += abs(currentBotScore//2)
-                currentBotScore -= abs(currentBotScore//2)
-        else:
-            if isAnswerCorrect:
-                isLastAnswerCorrect = True
-                currentBotScore += abs(currentPlayerScore//2)
-                currentPlayerScore -= abs(currentPlayerScore//2)
-
-        # Changes Scene based on Environment
-        if ENVIRONMENT == "COLAB":
-            change_scene_to(nextScene)
-        else:
-            do_score_showing()
 
 
 # Agent Classes -----------------------------
