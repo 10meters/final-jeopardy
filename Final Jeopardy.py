@@ -697,27 +697,9 @@ class QuestionCardPage(Page):
         ->returns a boolean (True if answer is correct, else False)
         developer-in-charge: AJ
         '''
-        print(gameState)
-        gameDifficulty = gameState.gameDifficulty
-
-        # In PVP, get player answer
-        if gameDifficulty == "PVP":
-            return self.get_user_answer_to_question()
-
-        # In the hardest difficulty, the bot is always correct
-        if gameDifficulty == "BSDSBA_PIONEER":
-            return True
-
-        #"Rolls a 100-sided die"
-        d100 = randint(1, 100)
-        successTreshhold = 0
-
-        if gameDifficulty == "FIRST_GRADER":
-            successTreshhold = 33 # The dice has to match or roll below this to succeed (~33% chance)
-        else:
-            successTreshhold = 60 # The dice has to match or roll below this to succeed (~66% chance)
-
-        return d100 <= successTreshhold # Evaluates to either True or False (see previous 2 comments)
+        mediator = gameState.mediator
+        answerStatus = mediator.get_answer()
+        return answerStatus
 
     def render(self, gameState):
         '''
@@ -1113,8 +1095,8 @@ class ScoreBoardPage(Page):
         if not isGoldenQuestion:
             gameState.change_turn()
         else:
-            currentQuestion = choice(goldenQuestions)
-            goldenQuestions.pop(goldenQuestions.index(currentQuestion))
+            gameState.currentQuestion = choice(goldenQuestions)
+            goldenQuestions.pop(goldenQuestions.index(gameState.currentQuestion))
             gameState.currentQuestion["isGolden"] = False
 
 
@@ -1432,7 +1414,7 @@ class StandardBot(Contestant, Bot): #Multiple Inheritance
 
         return int(chosenCategory), chosenBidValue
 
-    def choose_answer_result(self, opponent, currentQuestion):
+    def choose_answer_result(self):
         """
         randomly chooses to answer correctly or not based on difficulty
         calls a method to transfer half the points if answering correctly
@@ -1450,11 +1432,10 @@ class StandardBot(Contestant, Bot): #Multiple Inheritance
             case "easy":
                 result = choice([False, False, True])
             case "medium":
-                result = choice([False, False, True])
+                result = choice([False, True])
             case "hard":
                 result = True
-        if result:
-            self.get_half_the_points(opponent)
+
         return result
 
 class GeekBot(Contestant, Bot):
@@ -1485,10 +1466,10 @@ class GeekBot(Contestant, Bot):
            a specialty taken from the list of currentQuestions to be preferred by the bot.
            Value is the index of the category in the categorylist
         """
-        assert specialty in [0,1,2,3,4]
+        assert specialty in [0,1,2,3]
         self.__specialty = specialty
 
-    def choose_random_question(self, questions):
+    def choose_random_question(self):
         """
         randomly chooses a question from a list
 
@@ -1499,10 +1480,12 @@ class GeekBot(Contestant, Bot):
         """
         hasValidInputs = False
 
-        chosenBidValue= ["200", "400", "600", "800"][self.__specialty]
+        categoryList = ["1", "2", "3", "4"]
+        categoryList.append(["1", "2", "3", "4"][self.__specialty])
 
         while not hasValidInputs: # This loops until a valid input is given
-            chosenCategory = choice(["1", "2", "3", "4"])
+            chosenCategory = choice(categoryList)
+            chosenBidValue= choice(["200", "400", "600", "800"])
 
             #Checks the validity of player input. Loops again if input is invalid
             if (not self.check_if_valid_input(chosenCategory,["1", "2", "3", "4"])) or (not self.check_if_valid_input(chosenBidValue,["200", "400", "600", "800"])):
@@ -1511,11 +1494,15 @@ class GeekBot(Contestant, Bot):
                 if not GameState.get_question(int(chosenCategory), chosenBidValue)["isAlreadyAsked"]:
                     hasValidInputs = True
             
-            chosenBidValue= choice(["200", "400", "600", "800"])
+            
+        if chosenCategory == ["1", "2", "3", "4"][self.__specialty]:
+            self.isGeeking = True
+        else:
+            self.isGeeking = False
 
         return int(chosenCategory), chosenBidValue
 
-    def choose_answer_result(self, opponent, currentQuestion):
+    def choose_answer_result(self):
         """
         randomly chooses to answer correctly or not based on bot specialty
         calls a method to transfer half the points if answering correctly
@@ -1528,13 +1515,10 @@ class GeekBot(Contestant, Bot):
             the current question being asked
         """
         result = False
-        if self.__specialty == currentQuestion:
-            result = choice([False, True, True])
+        if self.isGeeking:
+            result = True
         else:
-            result = choice([False, False, True])
-
-        if result:
-            self.get_half_the_points(opponent)
+            result = choice([False, True])
         return result
 
 class HelperBot(Bot):
@@ -1556,11 +1540,34 @@ class StudentBot(StandardBot):
     - difficulty (int): Represents the current difficulty level of the game.
 
     Methods:
-    - difficultyRamp(difficultyPerInterval: int, interval: int):
-        Sets the parameters for the difficulty increase over intervals.
-    - set_difficulty_ramp(difficultyRamp: (int, int)):
+    - set_difficulty_ramp: int
         Sets the difficulty increase parameters using a tuple.
     """
+    def __init__(self):
+        self.turnNum = 0
+        self.possibleResults = [False, False, True]
+
+    def choose_answer_result(self):
+        """
+        randomly chooses to answer correctly or not based on difficulty
+        calls a method to transfer half the points if answering correctly
+
+        Parameters
+        ----------
+        opponent : Contestant Sub.
+            Reference to the opponent object to get score from
+        currentQuestion : str
+            the current question being asked
+        """
+        if self.turnNum % 3 == 0:
+            self.possibleResults.append(True)
+        self.turnNum +=1
+
+
+        result = choice(self.possibleResults)
+        return result
+
+    
 
 class RiddlerBot(Bot, Contestant):
     """
@@ -1594,7 +1601,8 @@ class ContestantFactory:
                 return standard
             case "GEEK":
                 geek = GeekBot()
-                geek.set_specialty(randint(0,4))
+                geek.set_specialty(randint(0,3))
+                return geek
             case "Player":
                 return Player()
             case "STUDENT":
@@ -1641,9 +1649,9 @@ class TurnMediator():
 
         currentPlayer = self.turnOrder[self.turn]
 
-        answer = currentPlayer.choose_random_question()
+        question = currentPlayer.choose_random_question()
 
-        return answer
+        return question
 
     def get_answer(self):
         """
@@ -1659,7 +1667,11 @@ class TurnMediator():
         ----------
         None: None
         """
-        pass
+        currentPlayer = self.turnOrder[self.turn]
+
+        answer = currentPlayer.choose_answer_result()
+
+        return answer
 
     def next_turn(self):
         """
