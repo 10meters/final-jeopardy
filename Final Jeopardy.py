@@ -134,7 +134,7 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
-    stage = 1
+    stage = 2
 
     actualQuestions={}
 
@@ -507,7 +507,9 @@ Oh no, your friend's been kidnapped! You must prepare yourself for the match to 
             storyFrame.grid(column=2, row=0, sticky=tk.W+tk.E)
 
             story = tk.Label(
-                    text="I NEED TEXT HERE PLS MORE TEXT UWUWUWUW",
+                    text='''"So you finally reveal yourself! At long last, we can settle once and for all who the greatest trivia master is!"
+
+You stand opposite to the Riddler, buzzer at the ready. This is the final round''',
                     master=storyFrame,
                     font = ss.REGULAR_TEXT["FONT"],
                     fg=ss.COLORS["ACCENT_GOLD"],
