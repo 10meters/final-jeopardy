@@ -136,7 +136,7 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
-
+    actualQuestions={}
 
     def __init__(self):
         self.set_actual_questions()
@@ -151,7 +151,22 @@ class GameState():
         self.isLastAnswerCorrect = False
         self.isGameOngoing= True
 
+        self.mediator = self.initialize_mediator()
 
+    def change_turn(self):
+        self.isPlayerMove = not self.isPlayerMove
+
+        self.mediator.next_turn()
+
+    def initialize_mediator(self):
+        mediatorObject = TurnMediator([], 0)
+        return mediatorObject
+
+    def add_player(self, difficulty):
+        player = ContestantFactory.create_contestant(difficulty)
+        self.mediator.turnOrder.append(player)
+
+    @classmethod
     def set_actual_questions(cls):
         '''
         loads 4 random questions per category, for 5 categories
@@ -191,6 +206,22 @@ class GameState():
             questionList[category]=(randomQuestions)   # Updates the global variable based on generated random questions
 
         cls.actualQuestions = questionList
+
+    @classmethod
+    def get_question(cls, category, bid):
+        '''
+        gets the questions from ActualQuestions based on category and bid value
+        int, str -> returns Question dict
+        developer-in-charge: mayo
+        '''
+        actualQuestions = cls.actualQuestions
+
+        # Bid values corresponds to index, this dict allows bid to be converted to index
+        bidToIndex = {"200": 0, "400": 1, "600": 2, "800":3}
+
+        # Get the question based on the provided input
+        categoryKey = list(actualQuestions)[category-1] #gets the key of the chosen category
+        return actualQuestions[categoryKey][bidToIndex[str(bid)]]
 
 # Page Classes ------------------------------
 class Page(ABC):
@@ -286,44 +317,34 @@ class MenuPage(Page):
         #Display Difficulties
         HEIGHT = 1
         WIDTH = 60
+ 
         FirstGradeButton = tk.Button(
-                            font=ss.OPTION_BUTTONS["FONT"],
-                            bg =ss.OPTION_BUTTONS["BACKGROUND_COLOR"],
-                            fg =ss.OPTION_BUTTONS["FONT_COLOR"],
-                            master=root,
-                            height=HEIGHT, width=WIDTH,
                             text="First Grader - Gets it right ~33% of the time",
                             command=lambda: self.process("FIRST_GRADER", gameState))
         HighSchoolerButton = tk.Button(
-                            font=ss.OPTION_BUTTONS["FONT"],
-                            bg =ss.OPTION_BUTTONS["BACKGROUND_COLOR"],
-                            fg =ss.OPTION_BUTTONS["FONT_COLOR"],
-                            height=HEIGHT, width=WIDTH,
-                            master=root,
                             text="High Schooler - Gets it right ~60% of the time",
                             command=lambda: self.process("HIGH_SCHOOLER", gameState))
-        PioneerButton = tk.Button(
-                            font=ss.OPTION_BUTTONS["FONT"],
-                            bg =ss.OPTION_BUTTONS["BACKGROUND_COLOR"],
-                            fg =ss.OPTION_BUTTONS["FONT_COLOR"],
-                            height=HEIGHT, width=WIDTH,
-                            master=root,
+        PionnerButton = tk.Button(
                             text="BSDSBA BATCH 2027 STUDENT PIONEER - Gets it right ALL THE TIME",
                             command=lambda: self.process("BSDSBA_PIONEER", gameState))
-        PVPButton = tk.Button(
-                            font=ss.OPTION_BUTTONS["FONT"],
-                            bg =ss.OPTION_BUTTONS["BACKGROUND_COLOR"],
-                            fg =ss.OPTION_BUTTONS["FONT_COLOR"],
-                            height=HEIGHT, width=WIDTH,
-                            master=root,
-                            text="PLAYER VERSUS PLAYER",
+        GeekButton = tk.Button(
+                            text="Geek Bot - Specializes in a random category",
+                            command=lambda: self.process("GEEK", gameState))
+        StudentButton = tk.Button(
+                            text="Student Bot - Learns along the way. Gets more difficult.",
+                            command=lambda: self.process("STUDENT", gameState))
+        PVPButton = tk.Button(text="PLAYER VERSUS PLAYER",
                             command=lambda: self.process("PVP", gameState))
-
-        FirstGradeButton.pack(pady=2)
-        HighSchoolerButton.pack(pady=2)
-        PioneerButton.pack(pady=2)
-        PVPButton.pack(pady=2)
-
+        
+        buttonList = [FirstGradeButton, HighSchoolerButton, PionnerButton, GeekButton, StudentButton, PVPButton]
+        for button in buttonList:
+            buttonIndex = buttonList.index(button)
+            button.configure(
+                        font=ss.OPTION_BUTTONS["FONT"],
+                        height=HEIGHT, width=WIDTH,
+                        bg =ss.OPTION_BUTTONS["BACKGROUND_COLOR"],
+                        fg =ss.OPTION_BUTTONS["FONT_COLOR"])
+            button.pack(pady=2)
 
         root.mainloop()
         mixer.quit()
@@ -334,6 +355,10 @@ class MenuPage(Page):
         str, str -> no return value
         developer-in-charge: mayo
         '''
+
+
+        gameState.mediator.turnOrder.append(Player())
+        gameState.add_player(difficulty)
 
         #updates difficulty
         gameState.gameDifficulty = difficulty
@@ -527,31 +552,11 @@ class QuestionBoardPage(Page):
         ->returns the input as a tuple(chosenCategory:int, BidValue:str)
         developer-in-charge: Chloe
         '''
-        hasValidInputs = False
 
-        while not hasValidInputs: # This loops until a valid input is given
-            chosenCategory = choice(["1", "2", "3", "4"])
-            chosenBidValue= choice(["200", "400", "600", "800"])
+        mediator = gameState.mediator
+        question = mediator.get_question()
 
-            #Checks the validity of player input. Loops again if input is invalid
-            if (not self.check_if_valid_input(chosenCategory,["1", "2", "3", "4"])) or (not self.check_if_valid_input(chosenBidValue,["200", "400", "600", "800"])):
-                pass
-            else:
-                if not self.get_question(int(chosenCategory), chosenBidValue, gameState)["isAlreadyAsked"]:
-                    hasValidInputs = True
-
-        return int(chosenCategory), chosenBidValue
-
-    def check_if_valid_input(self, input, allowedValues):
-        '''
-        Checks if input is allowed
-        array element, array -> returns a boolean value (returns True if allowed, else returns False)
-        developer-in-charge: mayo
-        '''
-        for value in allowedValues: # Loops through all allowed values
-            if input==value: # Check if input matches one of the allowed values, returns True if true
-                print(input, value) # Prints the input and value for debugging, should be the same
-                return True
+        return question
 
     def render(self, gameState):
         '''
@@ -641,21 +646,6 @@ class QuestionBoardPage(Page):
 
         hostFrame.pack(fill="x", padx=20, pady=20)
     
-    def get_question(self, category, bid, gameState):
-        '''
-        gets the questions from ActualQuestions based on category and bid value
-        int, str -> returns Question dict
-        developer-in-charge: mayo
-        '''
-        actualQuestions = gameState.actualQuestions
-
-        # Bid values corresponds to index, this dict allows bid to be converted to index
-        bidToIndex = {"200": 0, "400": 1, "600": 2, "800":3}
-
-        # Get the question based on the provided input
-        categoryKey = list(actualQuestions)[category-1] #gets the key of the chosen category
-        return actualQuestions[categoryKey][bidToIndex[str(bid)]]
-
     def process(self, nextScene, questionCategory, questionBidValue, gameState):
         '''
         Edits the currentQuestion var to a dict containing the question details
@@ -667,7 +657,7 @@ class QuestionBoardPage(Page):
         gameState.lastBidValue = int(questionBidValue)
 
         #Get the question
-        gameState.currentQuestion = self.get_question(questionCategory, questionBidValue, gameState)
+        gameState.currentQuestion = gameState.get_question(questionCategory, questionBidValue)
 
         #Mark the question as asked
         gameState.currentQuestion["isAlreadyAsked"] = True
@@ -1121,10 +1111,7 @@ class ScoreBoardPage(Page):
 
         # Switch Turns
         if not isGoldenQuestion:
-            if gameState.isPlayerMove:
-                gameState.isPlayerMove = False
-            else:
-                gameState.isPlayerMove = True
+            gameState.change_turn()
         else:
             currentQuestion = choice(goldenQuestions)
             goldenQuestions.pop(goldenQuestions.index(currentQuestion))
@@ -1314,33 +1301,6 @@ class EndPage(Page):
 
 
 # Agent Classes -----------------------------
-class Contestant(ABC):
-    """
-    Contestants are agents that have scores, a name, and can win.
-
-    Developer-in-Charge: 
-
-    Attributes
-    ----------
-    example: data_type
-        Description
-    """
-
-class Bot(ABC):
-    """
-    Bots are agents that can answer and get questions without player
-    input.
-
-    Developer-in-Charge: 
-
-    Attributes
-    ----------
-    example: data_type
-        Description
-    """
-
-from abc import ABC, abstractmethod
-from random import choice
 
 # Abstract Classes
 class Contestant(ABC):
@@ -1355,7 +1315,7 @@ class Contestant(ABC):
         the number of points a contestant has
   """
 
-  def __init__(self, name, score):
+  def __init__(self, name="Bot", score=0):
     """
     Sets the necessary attributes for the contestants
 
@@ -1389,23 +1349,35 @@ class Contestant(ABC):
     return f"{self.name}: {self.score}"
 
 class Bot(ABC):
-  """
+    """
     An abstract class to represent a "bot", objects able to act like a player without user input
-  """
-  @abstractmethod
-  def choose_random_question():
     """
-    Chooses a random question from currentQuestions
-    """
-    pass
 
-  @abstractmethod
-  def choose_answer_result():
-    """
-    Returns true and calls Contestant.get_half_the_points() if bot should get the answer correct,
-    only returns false otherwise
-    """
-    pass
+    @abstractmethod
+    def choose_random_question():
+        """
+        Chooses a random question from currentQuestions
+        """
+        pass
+
+    @abstractmethod
+    def choose_answer_result():
+        """
+        Returns true and calls Contestant.get_half_the_points() if bot should get the answer correct,
+        only returns false otherwise
+        """
+        pass
+
+    def check_if_valid_input(self, input, allowedValues):
+        '''
+        Checks if input is allowed
+        array element, array -> returns a boolean value (returns True if allowed, else returns False)
+        developer-in-charge: mayo
+        '''
+        for value in allowedValues: # Loops through all allowed values
+            if input==value: # Check if input matches one of the allowed values, returns True if true
+                print(input, value) # Prints the input and value for debugging, should be the same
+                return True
 
 # Players Classes
 class Player(Contestant):
@@ -1424,7 +1396,7 @@ class StandardBot(Contestant, Bot): #Multiple Inheritance
         qualitative description of the difficulty
     """
     
-    def set_difficulty(self, difficulty):
+    def set_specialty(self, difficulty):
         """
         setter method that sets the difficulty attribute of the object
 
@@ -1436,7 +1408,7 @@ class StandardBot(Contestant, Bot): #Multiple Inheritance
         assert difficulty in ["easy", "medium", "hard"]
         self.__difficulty = difficulty
 
-    def choose_random_question(self, questions):
+    def choose_random_question(self):
         """
         randomly chooses a question from a list
 
@@ -1445,7 +1417,20 @@ class StandardBot(Contestant, Bot): #Multiple Inheritance
         questions: list[str]
             list of questions to choose from
         """
-        return choice(questions)
+        hasValidInputs = False
+
+        while not hasValidInputs: # This loops until a valid input is given
+            chosenCategory = choice(["1", "2", "3", "4"])
+            chosenBidValue= choice(["200", "400", "600", "800"])
+
+            #Checks the validity of player input. Loops again if input is invalid
+            if (not self.check_if_valid_input(chosenCategory,["1", "2", "3", "4"])) or (not self.check_if_valid_input(chosenBidValue,["200", "400", "600", "800"])):
+                pass
+            else:
+                if not GameState.get_question(int(chosenCategory), chosenBidValue)["isAlreadyAsked"]:
+                    hasValidInputs = True
+
+        return int(chosenCategory), chosenBidValue
 
     def choose_answer_result(self, opponent, currentQuestion):
         """
@@ -1496,22 +1481,39 @@ class GeekBot(Contestant, Bot):
 
         Parameters
         ----------
-        specialty : str
-           a specialty taken from the list of currentQuestions to be preferred by the bot
+        specialty : int
+           a specialty taken from the list of currentQuestions to be preferred by the bot.
+           Value is the index of the category in the categorylist
         """
-        assert specialty in ["Science", "Math", "History", "Business"]
+        assert specialty in [0,1,2,3,4]
         self.__specialty = specialty
 
     def choose_random_question(self, questions):
         """
-        returns the question preferred by the bot based on its specialty
+        randomly chooses a question from a list
 
         Parameters
         ----------
-        questions : list of str
-           the list of possible questions
+        questions: list[str]
+            list of questions to choose from
         """
-        return self.__specialty
+        hasValidInputs = False
+
+        chosenBidValue= ["200", "400", "600", "800"][self.__specialty]
+
+        while not hasValidInputs: # This loops until a valid input is given
+            chosenCategory = choice(["1", "2", "3", "4"])
+
+            #Checks the validity of player input. Loops again if input is invalid
+            if (not self.check_if_valid_input(chosenCategory,["1", "2", "3", "4"])) or (not self.check_if_valid_input(chosenBidValue,["200", "400", "600", "800"])):
+                pass
+            else:
+                if not GameState.get_question(int(chosenCategory), chosenBidValue)["isAlreadyAsked"]:
+                    hasValidInputs = True
+            
+            chosenBidValue= choice(["200", "400", "600", "800"])
+
+        return int(chosenCategory), chosenBidValue
 
     def choose_answer_result(self, opponent, currentQuestion):
         """
@@ -1570,7 +1572,35 @@ class RiddlerBot(Bot, Contestant):
 
 # Factory Class -----------------------------
 class ContestantFactory:
-    pass
+    """
+    A factory that initializes contestant subclasses based
+    on user specifications
+    """
+
+    @staticmethod
+    def create_contestant(type):
+        match type:
+            case "FIRST_GRADER":
+                standard = StandardBot()
+                standard.set_specialty("easy") 
+                return standard
+            case "HIGH_SCHOOLER":
+                standard = StandardBot()
+                standard.set_specialty("medium") 
+                return standard
+            case "BSDSBA_PIONEER":
+                standard = StandardBot()
+                standard.set_specialty("hard") 
+                return standard
+            case "GEEK":
+                geek = GeekBot()
+                geek.set_specialty(randint(0,4))
+            case "Player":
+                return Player()
+            case "STUDENT":
+                return StudentBot()
+            case "Riddler":
+                return RiddlerBot()
 
 # Mediator Class -----------------------------
 
@@ -1584,8 +1614,9 @@ class TurnMediator():
     ----------
     turnOrder: List[type[Contestant]]
         Determines whose turn it is in a round
-    turn: type[Contestant]
-        Determines whose turn it is in a round
+    turn: int
+        Determines whose turn it is in a round via index
+        in turnOrder
     """
     
     def __init__(self, turnOrder:list[type[Contestant]], turn:type[Contestant])->None:
@@ -1607,7 +1638,12 @@ class TurnMediator():
         ----------
         None: None
         """
-        pass
+
+        currentPlayer = self.turnOrder[self.turn]
+
+        answer = currentPlayer.choose_random_question()
+
+        return answer
 
     def get_answer(self):
         """
@@ -1639,7 +1675,10 @@ class TurnMediator():
         ----------
         None: None
         """
-        pass
+        if self.turn == 0:
+            self.turn = 1
+        else:
+            self.turn = 0
 
 
 def main()->None:
