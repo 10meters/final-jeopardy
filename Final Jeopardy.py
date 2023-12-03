@@ -136,7 +136,7 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
-    stage = 1
+    stage = 3
 
     actualQuestions={}
 
@@ -465,12 +465,21 @@ class IntroPage(Page):
             table.pack(fill="x", padx=15, pady=10)
             return
         elif stage == 3:
+            host = Image.open("sprites/riddle.png").resize((200,200), Image.Resampling.NEAREST)
+            Images["host"] = ImageTk.PhotoImage(host, master = root)
+
+            smallHost = Image.open("sprites/riddle.png").resize((120,120), Image.Resampling.NEAREST)
+            Images["small_host"] = ImageTk.PhotoImage(smallHost, master = root)
             # Clear Screen
             self.clear_notebook_screen()
+
+            backgroundPic = Image.open("sprites/lair.png").resize((SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.NEAREST)
+            Images['backgroundImage'] = ImageTk.PhotoImage(backgroundPic, master = root)
 
             # Display Bacground Image
             background = tk.Label(root,image = Images['backgroundImage'])
             background.place(x=0, y=0)
+
 
             # Display Header
             header = tk.Label(
