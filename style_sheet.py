@@ -13,6 +13,8 @@ COLORS = {
     "TEXT_BLACK" : "#000000",       # Black Text for bright Background 
 }
 
+
+
 H1 = { #For Category Labels
     "FONT": ("Euphemia", 25, "bold"),
     "FONT_COLOR": COLORS["TEXT_WHITE"],

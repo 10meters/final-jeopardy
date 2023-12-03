@@ -98,7 +98,7 @@ Sounds = {
 
 # Play Background Music
 mixer.init()
-#mixer.Channel(0).play(mixer.Sound("bgm.wav"), loops=-1)
+mixer.Channel(0).play(mixer.Sound("bgm.wav"), loops=-1)
 
 goldenQuestions=[ #Added by Cheska
     {"Question":"Which Disney Princess has the least amount of screen time?",
@@ -116,16 +116,16 @@ goldenQuestions=[ #Added by Cheska
     {"Question":"Which English city was once known as Duroliponte?",
       "Choices":["a) Cambridge", "b) Salisbury", "c) London", "d) Brighton"],
      "Answer":"a"},
-     {"Question":"Who was the co-ruler of King Leonidas of Sparta?",
+    {"Question":"Who was the co-ruler of King Leonidas of Sparta?",
       "Choices":["a) Anaxandrides", "b) Leotychidas II", "c) Darius", "d) Agis II"],
      "Answer":"b"},
-     {"Question":"What is Shakespeare's shortest play?",
+    {"Question":"What is Shakespeare's shortest play?",
       "Choices":["a) Romeo and Juliet", "b) Hamlet", "c) The Merchant of Venice", "d) The Comedy of Errors"],
      "Answer":"d"},
-     {"Question":"In terms of volume, which is the largest fresh lake in the world?",
+    {"Question":"In terms of volume, which is the largest fresh lake in the world?",
       "Choices":["a) Lake Michigan", "b) Lake Baikal", "c) Lake Victoria", "d) Great Bear Lake"],
      "Answer":"b"},
-     {"Question":"How many episodes of Keeping Up with the Kardashians are there?",
+    {"Question":"How many episodes of Keeping Up with the Kardashians are there?",
       "Choices":["a) 280", "b) 317", "c) 198", "d) 143"],
      "Answer":"a"},
 ]
@@ -136,6 +136,8 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
+    stage = 1
+
     actualQuestions={}
 
     def __init__(self):
@@ -163,7 +165,7 @@ class GameState():
         return mediatorObject
 
     def add_player(self, difficulty):
-        player = ContestantFactory.create_contestant(difficulty)
+        player = ContestantFactory.create_contestant(difficulty, self)
         self.mediator.turnOrder.append(player)
 
     @classmethod
@@ -285,6 +287,9 @@ class MenuPage(Page):
     def run(self, gameState):
         self.render(gameState)
 
+
+
+
     def render(self, gameState):
         '''
         prints the info for the menu
@@ -318,6 +323,9 @@ class MenuPage(Page):
         HEIGHT = 1
         WIDTH = 60
  
+        StoryModeButton = tk.Button(
+                            text="STORY MODE - Can you get yourself out of Jeopardy?",
+                            command=lambda: self.process("STORY MODE", gameState))
         FirstGradeButton = tk.Button(
                             text="First Grader - Gets it right ~33% of the time",
                             command=lambda: self.process("FIRST_GRADER", gameState))
@@ -336,7 +344,7 @@ class MenuPage(Page):
         PVPButton = tk.Button(text="PLAYER VERSUS PLAYER",
                             command=lambda: self.process("PVP", gameState))
         
-        buttonList = [FirstGradeButton, HighSchoolerButton, PionnerButton, GeekButton, StudentButton, PVPButton]
+        buttonList = [StoryModeButton, FirstGradeButton, HighSchoolerButton, PionnerButton, GeekButton, StudentButton, PVPButton]
         for button in buttonList:
             buttonIndex = buttonList.index(button)
             button.configure(
@@ -381,7 +389,13 @@ class IntroPage(Page):
         Renders the Instructions and accepts user input if PVP
         developer-in-charge: mayo
         '''
-        self.render(gameState)    # Renders the instructions to the game
+
+        if gameState.gameDifficulty == "STORY MODE":
+            self.render_story(gameState)
+
+        else:
+            self.render(gameState)    # Renders the instructions to the game
+
         if gameState.gameDifficulty == "PVP":
             players = self.get_players_names(gameState)    # Waits for user
         else:
@@ -392,6 +406,164 @@ class IntroPage(Page):
                                 bg=ss.PRIMARY_BUTTON["BACKGROUND_COLOR"],
                                 fg=ss.PRIMARY_BUTTON["FONT_COLOR"])
             startButton.pack()
+
+    def render_story(self, gameState):
+        global root
+        global FONT
+        global scaledLogo
+        global Images
+        global SCREEN_HEIGHT
+        stage = gameState.stage
+
+        if stage == 1:
+            self.render(gameState)
+        elif stage == 2:
+            # Clear Screen
+            self.clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            # Display Header
+            header = tk.Label(
+                            text= f'HOW TO PLAY:',
+                            font=ss.H2["FONT"],
+                            fg=ss.H2["FONT_COLOR"],
+                            bg=ss.H2["BACKGROUND_COLOR"])
+            header.pack(pady=SCREEN_HEIGHT/20)
+
+            #Rules and Story Table
+            table = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            table.columnconfigure(0, weight=1)
+            table.columnconfigure(1, weight=3)
+
+            #Display Story
+            storyFrame = tk.Frame(table, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            storyFrame.grid(column=2, row=0, sticky=tk.W+tk.E)
+
+            story = tk.Label(
+                    text="I NEED TEXT HERE PLS",
+                    master=storyFrame,
+                    font = ss.REGULAR_TEXT["FONT"],
+                    fg=ss.COLORS["ACCENT_GOLD"],
+                    bg=ss.COLORS["DARK_MONEY_GREEN"],
+                    wraplength=600, justify="left")
+            story.pack(anchor="w", padx=10, pady=1, ipady=10)
+
+            # Display Rules
+            ruleFrame = tk.Frame(table,bg=ss.COLORS["DARK_MONEY_GREEN"])
+            ruleFrame.grid(column=1, row=0, sticky=tk.W)
+            rules = '1. Click the "Start" button to begin the game.|2. Select the category of questions you want to answer|3. You will be presented with a question from the selected category.|4. Read the question and carefully consider the answer choices (a, b, c).|5. Click on the choice that you believe is correct.|6. Your final score will be displayed at the end of the game'.split("|")
+            for rule in rules:
+                textLine = tk.Label(
+                                text=rule, master=ruleFrame,
+                                font = ss.REGULAR_TEXT["FONT"],
+                                fg=ss.REGULAR_TEXT["FONT_COLOR"],
+                                bg=ss.COLORS["DARK_MONEY_GREEN"])
+                textLine.pack(anchor="w", padx=10, pady=1)
+            table.pack(fill="x", padx=15, pady=10)
+            return
+        elif stage == 3:
+            # Clear Screen
+            self.clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            # Display Header
+            header = tk.Label(
+                            text= f'HOW TO PLAY:',
+                            font=ss.H2["FONT"],
+                            fg=ss.H2["FONT_COLOR"],
+                            bg=ss.H2["BACKGROUND_COLOR"])
+            header.pack(pady=SCREEN_HEIGHT/20)
+
+            #Rules and Story Table
+            table = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            table.columnconfigure(0, weight=1)
+            table.columnconfigure(1, weight=3)
+
+            #Display Story
+            storyFrame = tk.Frame(table, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            storyFrame.grid(column=2, row=0, sticky=tk.W+tk.E)
+
+            story = tk.Label(
+                    text="I NEED TEXT HERE PLS MORE TEXT UWUWUWUW",
+                    master=storyFrame,
+                    font = ss.REGULAR_TEXT["FONT"],
+                    fg=ss.COLORS["ACCENT_GOLD"],
+                    bg=ss.COLORS["DARK_MONEY_GREEN"],
+                    wraplength=600, justify="left")
+            story.pack(anchor="w", padx=10, pady=1, ipady=10)
+
+            # Display Rules
+            ruleFrame = tk.Frame(table,bg=ss.COLORS["DARK_MONEY_GREEN"])
+            ruleFrame.grid(column=1, row=0, sticky=tk.W)
+            rules = '1. Click the "Start" button to begin the game.|2. Select the category of questions you want to answer|3. You will be presented with a question from the selected category.|4. Read the question and carefully consider the answer choices (a, b, c).|5. Click on the choice that you believe is correct.|6. Your final score will be displayed at the end of the game'.split("|")
+            for rule in rules:
+                textLine = tk.Label(
+                                text=rule, master=ruleFrame,
+                                font = ss.REGULAR_TEXT["FONT"],
+                                fg=ss.REGULAR_TEXT["FONT_COLOR"],
+                                bg=ss.COLORS["DARK_MONEY_GREEN"])
+                textLine.pack(anchor="w", padx=10, pady=1)
+            table.pack(fill="x", padx=15, pady=10)
+            return 
+        elif stage == 4:
+            # Clear Screen
+            self.clear_notebook_screen()
+
+            # Display Bacground Image
+            background = tk.Label(root,image = Images['backgroundImage'])
+            background.place(x=0, y=0)
+
+            # Display Header
+            header = tk.Label(
+                            text= f'HOW TO PLAY:',
+                            font=ss.H2["FONT"],
+                            fg=ss.H2["FONT_COLOR"],
+                            bg=ss.H2["BACKGROUND_COLOR"])
+            header.pack(pady=SCREEN_HEIGHT/20)
+
+            #Rules and Story Table
+            table = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            table.columnconfigure(0, weight=1)
+            table.columnconfigure(1, weight=3)
+
+            #Display Story
+            storyFrame = tk.Frame(table, bg=ss.COLORS["DARK_MONEY_GREEN"])
+            storyFrame.grid(column=2, row=0, sticky=tk.W+tk.E)
+
+            story = tk.Label(
+                    text="YOU SAVED HER HOORAY :)",
+                    master=storyFrame,
+                    font = ss.REGULAR_TEXT["FONT"],
+                    fg=ss.COLORS["ACCENT_GOLD"],
+                    bg=ss.COLORS["DARK_MONEY_GREEN"],
+                    wraplength=600, justify="left")
+            story.pack(anchor="w", padx=10, pady=1, ipady=10)
+
+            # Display Rules
+            ruleFrame = tk.Frame(table,bg=ss.COLORS["DARK_MONEY_GREEN"])
+            ruleFrame.grid(column=1, row=0, sticky=tk.W)
+            rules = '1. Click the "Start" button to begin the game.|2. Select the category of questions you want to answer|3. You will be presented with a question from the selected category.|4. Read the question and carefully consider the answer choices (a, b, c).|5. Click on the choice that you believe is correct.|6. Your final score will be displayed at the end of the game'.split("|")
+            for rule in rules:
+                textLine = tk.Label(
+                                text=rule, master=ruleFrame,
+                                font = ss.REGULAR_TEXT["FONT"],
+                                fg=ss.REGULAR_TEXT["FONT_COLOR"],
+                                bg=ss.COLORS["DARK_MONEY_GREEN"])
+                textLine.pack(anchor="w", padx=10, pady=1)
+            table.pack(fill="x", padx=15, pady=10)
+            
+            endTurnButton = tk.Button(root, text = "End Game", command=root.destroy, font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+            endTurnButton.pack(pady=15)
+            
+            endTurnButton = tk.Button(root, text = "New Game", command=self.new_game, font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+            endTurnButton.pack(pady=10)
+
 
     def get_players_names(self, gameState):
         '''
@@ -834,8 +1006,8 @@ class ScoreBoardPage(Page):
                 endTurnButton = tk.Button(root, text = "End Turn", command=lambda: self.process(False, gameState), font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
                 endTurnButton.pack(pady=15)
         else:
-            endTurnButton = tk.Button(root, text = "End Game", command=root.destroy, font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
-            endTurnButton.pack(pady=15)
+            end = EndPage()
+            self.change_page(end, gameState)
 
     def check_if_no_more_questions(self, gameState):
         '''
@@ -851,8 +1023,9 @@ class ScoreBoardPage(Page):
             for question in actualQuestions[category]:
                 if not question["isAlreadyAsked"]:
                     return
-
+        
         gameState.isGameOngoing = False
+
 
 
     def render(self, gameState):
@@ -1096,13 +1269,11 @@ class ScoreBoardPage(Page):
             gameState.change_turn()
         else:
             gameState.currentQuestion = choice(goldenQuestions)
-            goldenQuestions.pop(goldenQuestions.index(gameState.currentQuestion))
             gameState.currentQuestion["isGolden"] = False
 
 
         gameState.previousPlayerScore = gameState.currentPlayerScore
         gameState.previousBotScore = gameState.currentBotScore
-        # Changes Scene based on ENVIRONMENT:
 
         if isGoldenQuestion:
             goldenQuestion = GoldenQuestionPage()
@@ -1270,14 +1441,255 @@ class EndPage(Page):
     None: None
     '''
 
-    def run():
-        pass
+    def run(self, gameState):
+        self.render(gameState)
 
-    def render():
-        pass
+    def render(self, gameState):
+        '''
+        prints the scores of both contestants
+        -> no return value
+        developer-in-charge: Cheska
+        '''
+        currentPlayerScore = gameState.currentPlayerScore
+        previousPlayerScore = gameState.previousPlayerScore
+        currentBotScore = gameState.currentBotScore
+        previousBotScore = gameState.previousBotScore
+        isLastAnswerCorrect = gameState.isLastAnswerCorrect
+        lastBidValue = gameState.lastBidValue
+        isPlayerMove = gameState.isPlayerMove
+        playerNames = gameState.playerNames
+        isGameOngoing = gameState.isGameOngoing
+        actualQuestions = gameState.actualQuestions
 
-    def process():
-        pass
+        self.clear_notebook_screen()
+
+        global root
+        global FONT
+        global Images
+        global Sounds
+
+        DARK_GREEN = ss.COLORS["DARK_MONEY_GREEN"]
+
+
+        # Text Formatting
+        currentPlayerScoreAsText = str(currentPlayerScore)
+        previousPlayerScoreAsText = str(previousPlayerScore)
+        playerScoreDeltaAsText = str(abs(currentPlayerScore - previousPlayerScore))
+
+        if currentPlayerScore - previousPlayerScore >0:
+            playerScoreDeltaAsText = "+"+playerScoreDeltaAsText # NOTE: += is not applicable here because concat is not associative
+        else:
+            playerScoreDeltaAsText = "-"+playerScoreDeltaAsText
+
+        currentBotScoreAsText = str(currentBotScore)
+        previousBotScoreAsText = str(previousBotScore)
+        botScoreDeltaAsText = str((abs(currentBotScore - previousBotScore)))
+
+        if currentBotScore - previousBotScore >0:
+            botScoreDeltaAsText = "+"+botScoreDeltaAsText # NOTE: += is not applicable here because concat is not associative
+        else:
+            botScoreDeltaAsText = "-"+botScoreDeltaAsText
+
+        scoreOperand = "+"
+        currentContestant = ""
+        answerStatus = ""
+
+        # Sets the appropriate Contestant, scoreOperand, and answer status based on
+        # whose turn it is and whether the last answer was correct
+
+        if isPlayerMove:
+            currentContestant = playerNames[0]
+        else:
+            currentContestant = playerNames[1]
+
+        if isLastAnswerCorrect:
+            scoreOperand = "+"
+            answerStatus = "got it CORRECT!"
+        else:
+            scoreOperand = "-"
+            answerStatus = "got it WRONG!"
+
+
+        # Clear Screen
+
+        # Display Bacground Image
+        background = tk.Label(root,image = Images['backgroundImage'])
+        background.place(x=0, y=0)
+
+        # Spacer
+        northPadding = tk.Frame()
+        northPadding.pack(pady=25)
+
+        #Setup score board
+        frame = tk.Frame(root, bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+        frame.columnconfigure(0, weight=10) # Player 1 column
+        frame.columnconfigure(1, weight=1)
+        frame.columnconfigure(2, weight=10) # Player 2 column
+
+        # Determines the icon sprite to be used
+        iconNumPlayer1 = 4
+        if currentPlayerScore<0:
+            iconNumPlayer1=0
+        elif currentPlayerScore<1000:
+            iconNumPlayer1=1
+        elif currentPlayerScore<2000:
+            iconNumPlayer1=2
+        elif currentPlayerScore<3000:
+            iconNumPlayer1=3
+
+        iconNumPlayer2 = 4
+        if currentBotScore<0:
+            iconNumPlayer2=0
+        elif currentBotScore<1000:
+            iconNumPlayer2=1
+        elif currentBotScore<2000:
+            iconNumPlayer2=2
+        elif currentBotScore<3000:
+            iconNumPlayer2=3
+
+
+        #Player1Frame
+        player1Frame = tk.Frame(frame, bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+        player1Name = tk.Label(
+                            text= playerNames[0],
+                            master=player1Frame,
+                            font=ss.H1["FONT"],
+                            bg=ss.H1["BACKGROUND_COLOR"],
+                            fg=ss.COLORS["TEXT_WHITE"])
+        player1Score = tk.Label(
+                            text= str(currentPlayerScore),
+                            master=player1Frame,
+                            font=ss.H1["FONT"],
+                            bg=ss.H1["BACKGROUND_COLOR"],
+                            fg=ss.COLORS["ACCENT_GOLD"])
+        player1Status = tk.Label(player1Frame, image=Images[f'level{iconNumPlayer1}_player1'], bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+        player1Name.pack(fill="x", expand=True)
+        player1Score.pack(fill="x", expand=True)
+        player1Status.pack(fill="x", expand=True)
+        player1Frame.grid(column=0, row=0,ipadx=10, sticky=tk.W+tk.E)
+
+        #Spacer
+        spacerFrame = tk.Frame(frame, bg=ss.COLORS["MONEY_GREEN"],)
+        spacer = tk.Label(
+                            text= "",
+                            master=spacerFrame,
+                            font=ss.H1["FONT"],
+                            bg=ss.COLORS["MONEY_GREEN"],
+                            fg=ss.COLORS["TEXT_WHITE"])
+        spacer.pack()
+        spacerFrame.grid(column=1, row=0, sticky=tk.W+tk.E+tk.N+tk.S)
+
+
+        #Player2Frame
+        player2Frame = tk.Frame(frame, bg=ss.COLORS["DARK_MONEY_GREEN"],)
+        player2Name = tk.Label(
+                            text= playerNames[1],
+                            master=player2Frame,
+                            font=ss.H1["FONT"],
+                            bg=ss.H1["BACKGROUND_COLOR"],
+                            fg=ss.COLORS["TEXT_WHITE"])
+        player2Score = tk.Label(
+                            text= str(currentBotScore),
+                            master=player2Frame,
+                            font=ss.H1["FONT"],
+                            bg=ss.H1["BACKGROUND_COLOR"],
+                            fg=ss.COLORS["ACCENT_GOLD"])
+        player2Status = tk.Label(player2Frame, image=Images[f'level{iconNumPlayer2}_player2'], bg=ss.COLORS["HIGHLIGHT_YELLOW"])
+        player2Name.pack(fill="x", expand=True)
+        player2Score.pack(fill="x", expand=True)
+        player2Status.pack(fill="x", expand=True)
+        player2Frame.grid(column=2, row=0, sticky=tk.W+tk.E)
+
+        frame.pack(fill="x", padx=30, pady=10, ipadx=10)
+
+
+        # Additional Info
+        additionalInfoFrame = tk.Frame(root, bg=ss.COLORS["DARK_MONEY_GREEN"])
+        additionalInfoFrame.columnconfigure(0, weight=1) # For Host Sprite
+        additionalInfoFrame.columnconfigure(1, weight=3) # For Answer Status
+        additionalInfoFrame.columnconfigure(2, weight=1) # For Spacing
+        additionalInfoFrame.columnconfigure(3, weight=1) # For Delta Scores
+        additionalInfoFrame.pack(fill="x", padx=30)
+
+        # Bottom Spacer
+        spacerBottomFrame = tk.Frame(additionalInfoFrame, bg=ss.COLORS["MONEY_GREEN"],)
+        spacerBottom = tk.Label(
+                            text= "",
+                            master=spacerFrame,
+                            font=ss.H1["FONT"],
+                            bg=ss.COLORS["MONEY_GREEN"],
+                            fg=ss.COLORS["TEXT_WHITE"])
+        spacerBottom.pack()
+        spacerBottomFrame.grid(column=2, row=0, sticky=tk.W+tk.E+tk.N+tk.S)
+
+
+
+        host = tk.Label(additionalInfoFrame,image = Images["host"], bg=ss.COLORS["HIGHLIGHT_YELLOW"], borderwidth=1)
+        host.grid(column=0, row=0, sticky="w")
+
+        winner = ""
+        if currentPlayerScore > currentBotScore:
+            winner = f"{playerNames[0]} WON!"
+            mixer.Channel(1).play(mixer.Sound("Player1Won.wav"))
+        elif currentPlayerScore == currentBotScore:
+            winner = "IT'S A TIE"
+        else:
+            winner = f"{playerNames[1]} WON!"
+            mixer.Channel(1).play(mixer.Sound("Player2Won.wav"))
+        questionStatus = tk.Label(
+                        text= f"{winner}",
+                        master=additionalInfoFrame,
+                        font=ss.H1["FONT"],
+                        bg=ss.H1["BACKGROUND_COLOR"],
+                        fg=ss.COLORS["ACCENT_GOLD"],
+                        justify="left")
+        questionStatus.grid(column=1, row=0, sticky="w")
+
+        questionStatus = tk.Label(
+                            text= f'''{playerNames[0]}: {playerScoreDeltaAsText} \n {playerNames[1]}: {botScoreDeltaAsText}''',
+                            master=additionalInfoFrame,
+                            font=ss.H2["FONT"],
+                            bg=ss.COLORS["TEXT_WHITE"],
+                            fg=ss.COLORS["TEXT_BLACK"])
+        questionStatus.grid(column=3, row=0)
+
+        isPlayerWon = currentPlayerScore > currentBotScore
+        self.process(gameState, isPlayerWon)
+
+    def process(self, gameState, isPlayerWon):
+        global root
+
+        gameDifficulty = gameState.gameDifficulty
+        stage = gameState.stage
+
+        if gameDifficulty == "STORY MODE" and isPlayerWon:
+            endTurnButton = tk.Button(root, text = "Continue Story", command= lambda state=gameState: self.next_story(gameState), font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+            endTurnButton.pack(pady=10)
+        else:
+            endTurnButton = tk.Button(root, text = "End Game", command=root.destroy, font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+            endTurnButton.pack(pady=15)
+            
+            endTurnButton = tk.Button(root, text = "New Game", command=self.new_game, font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
+            endTurnButton.pack(pady=10)
+    
+    def next_story(self, gameState):
+        GameState.stage += 1
+        del gameState
+
+        newGameState = GameState()
+        newGameState.gameDifficulty = "STORY MODE"
+
+        newGameState.mediator.turnOrder.append(Player())
+        newGameState.add_player("STORY MODE")
+
+        intro = IntroPage()
+
+        self.change_page(intro, newGameState)
+
+
+    def new_game(self):
+        self.clear_notebook_screen()
+        GameInitializer.main()
 
 
 
@@ -1577,6 +1989,30 @@ class RiddlerBot(Bot, Contestant):
     even if the answer is wrong.
     """
 
+    def __init__(self):
+        self.set_possible_states()
+    
+
+    def set_possible_states(self):
+        standard = StandardBot()
+        standard.set_specialty("medium")
+
+        geek1 = GeekBot()
+        geek1.set_specialty(randint(0,1))
+        geek2 = GeekBot()
+        geek2.set_specialty(randint(2,3))
+
+        student = StudentBot()
+
+        self.possibleStates = [standard, geek1, geek2, student]
+    
+    def choose_random_question(self):
+        self.current_state = choice(self.possibleStates)
+        return self.current_state.choose_random_question() 
+
+    def choose_answer_result(self):
+        return self.current_state.choose_answer_result()
+
 # Factory Class -----------------------------
 class ContestantFactory:
     """
@@ -1585,7 +2021,7 @@ class ContestantFactory:
     """
 
     @staticmethod
-    def create_contestant(type):
+    def create_contestant(type, gameState):
         match type:
             case "FIRST_GRADER":
                 standard = StandardBot()
@@ -1607,8 +2043,15 @@ class ContestantFactory:
                 return Player()
             case "STUDENT":
                 return StudentBot()
-            case "Riddler":
-                return RiddlerBot()
+            case "STORY MODE":
+                if gameState.stage == 1:
+                    standard = StandardBot()
+                    standard.set_specialty("easy")
+                    return standard 
+                elif gameState.stage == 2:
+                    return StudentBot()
+                else:
+                    return RiddlerBot()
 
 # Mediator Class -----------------------------
 
@@ -1692,18 +2135,20 @@ class TurnMediator():
         else:
             self.turn = 0
 
+class GameInitializer:
+    @staticmethod
+    def main()->None:
+        '''
+        starts the game loop
+        '''
+        #Initialize Global Var Class
+        gameState = GameState()
 
-def main()->None:
-    '''
-    starts the game loop
-    '''
-    #Initialize Global Var Class
-    gameState = GameState()
+        #Initialize Moderator
 
-    #Initialize Moderator
+        #Initialize all page classes
+        menu = MenuPage()
+        menu.run(gameState)
 
-    #Initialize all page classes
-    menu = MenuPage()
-    menu.run(gameState)
-main()
+GameInitializer.main()
 print("AAA")
