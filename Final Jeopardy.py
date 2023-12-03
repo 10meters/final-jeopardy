@@ -2036,8 +2036,7 @@ class RiddlerBot(Bot, Contestant):
     """
     A subclass of Bot and Contestant that represents a cheater bot in the game.
 
-    This bot takes two sequential turns, steals points randomly, and gains points
-    even if the answer is wrong.
+    This bot switches between four different states: standard, geek1, geek2, and student.
     """
 
     def __init__(self):
