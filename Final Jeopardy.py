@@ -413,8 +413,9 @@ class IntroPage(Page):
     def change_audio(self, gameState, audioButton):
         tracks = {
             "default":["bgm.wav", "bgm.wav", "bgm.wav", "bgm.wav"],
-            "Paolo":["bgm.wav", "bgm.wav", "bgm.wav", "bgm.wav"],
+            "Paolo":["bgm.wav", "FE.wav", "CLV.wav", "ok.wav"],
             "Cheska":["bgm.wav", "MK.wav", "LM.wav", "overworld.wav"],
+            "Chloe":["bgm.wav", "C1.wav", "C2.wav", "C3.wav"]
         }
 
         if GameState.current == "Default":
@@ -424,9 +425,11 @@ class IntroPage(Page):
             GameState.musicTrack = tracks["Cheska"]
             GameState.current = "Cheska"
         elif GameState.current == "Cheska":
+            GameState.musicTrack = tracks["Chloe"]
+            GameState.current = "Chloe"
+        elif GameState.current == "Chloe":
             GameState.musicTrack = tracks["default"]
             GameState.current = "Default"
-        
         audioButton.configure(text=f"{GameState.current}: Current Track")
         print(GameState.current, GameState.musicTrack)
         
