@@ -141,7 +141,7 @@ class GameState():
     def __init__(self):
         self.set_actual_questions()
         self.gameDifficulty: str = "FIRST_GRADE"
-        self.playerNames: list[str] = ["Player", "bot"]
+        self.playerNames: list[str] = ["Player", "Mr.Irdller"]
         self.possibleQuestions: dict = questions.possibleQuestions
         self.isPlayerMove:bool = True
         self.currentPlayerScore = 0
@@ -419,6 +419,9 @@ class IntroPage(Page):
             # Clear Screen
             self.clear_notebook_screen()
 
+            backgroundPic = Image.open("sprites/training.png").resize((SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.NEAREST)
+            Images['backgroundImage'] = ImageTk.PhotoImage(backgroundPic, master = root)
+
             # Display Bacground Image
             background = tk.Label(root,image = Images['backgroundImage'])
             background.place(x=0, y=0)
@@ -441,7 +444,14 @@ class IntroPage(Page):
             storyFrame.grid(column=2, row=0, sticky=tk.W+tk.E)
 
             story = tk.Label(
-                    text="I NEED TEXT HERE PLS",
+                    text='''Tis I, the Riddler! The greatest mind in this entire city! That is... until you came along. There is not enough room in this city for two trivia geniuses!
+
+I have taken one of your friends hostage, and if you ever want to see them again, you'll accept my challenge. Win, and I will turn myself in. Lose, and you can have them back, but you'll need to pay me everything you won at the trivia game plus extra.
+
+Signed,
+Riddler"
+
+Oh no, your friend's been kidnapped! You must prepare yourself for the match to come!''',
                     master=storyFrame,
                     font = ss.REGULAR_TEXT["FONT"],
                     fg=ss.COLORS["ACCENT_GOLD"],
@@ -463,12 +473,21 @@ class IntroPage(Page):
             table.pack(fill="x", padx=15, pady=10)
             return
         elif stage == 3:
+            host = Image.open("sprites/riddle.png").resize((200,200), Image.Resampling.NEAREST)
+            Images["host"] = ImageTk.PhotoImage(host, master = root)
+
+            smallHost = Image.open("sprites/riddle.png").resize((120,120), Image.Resampling.NEAREST)
+            Images["small_host"] = ImageTk.PhotoImage(smallHost, master = root)
             # Clear Screen
             self.clear_notebook_screen()
+
+            backgroundPic = Image.open("sprites/lair.png").resize((SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.NEAREST)
+            Images['backgroundImage'] = ImageTk.PhotoImage(backgroundPic, master = root)
 
             # Display Bacground Image
             background = tk.Label(root,image = Images['backgroundImage'])
             background.place(x=0, y=0)
+
 
             # Display Header
             header = tk.Label(
