@@ -5,15 +5,13 @@ Project Name: Mini Jeopardy: The Final Push
 
 Developers:
     - Lead: Paolo Mayo
-    - Enter your names here
+    - Samuel Samonte
+    - Cheska Ongpin
+    - AJ Subang
+    - Chloe Luengo
 
 Project Description:
-    Insert Project Description here.
-
-
-Note For Other Developers:
-    When editing this code, please take note of the following:
-        1. pass
+    Mini Jeopardy is a trivia game about an aspiring businessman and his adventures as he aims to be the city's biggest tycoon.
 '''
 
 #############################################
