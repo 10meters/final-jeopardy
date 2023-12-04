@@ -134,7 +134,7 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
-    stage = 1
+    stage = 3
     musicTrack = ["bgm.wav","bgm.wav","bgm.wav", "bgm.wav"]
     current = "Default"
     actualQuestions={}
@@ -1857,8 +1857,11 @@ class StandardBot(Contestant, Bot): #Multiple Inheritance
         difficulty : str
            qualitative description of the difficulty
         """
-        assert difficulty in ["easy", "medium", "hard"]
-        self.__difficulty = difficulty
+        try:
+            assert difficulty in ["easy", "medium", "hard"]
+            self.__difficulty = difficulty
+        except:
+            self.__difficulty = "easy"
 
     def choose_random_question(self):
         """
@@ -1936,8 +1939,11 @@ class GeekBot(Contestant, Bot):
            a specialty taken from the list of currentQuestions to be preferred by the bot.
            Value is the index of the category in the categorylist
         """
-        assert specialty in [0,1,2,3]
-        self.__specialty = specialty
+        try:
+            assert specialty in [0,1,2,3]
+            self.__specialty = specialty
+        except:
+            self.__specialty = 0
 
     def choose_random_question(self):
         """
