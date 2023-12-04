@@ -415,7 +415,8 @@ class IntroPage(Page):
             "default":["bgm.wav", "bgm.wav", "bgm.wav", "bgm.wav"],
             "Paolo":["bgm.wav", "FE.wav", "CLV.wav", "ok.wav"],
             "Cheska":["bgm.wav", "MK.wav", "LM.wav", "overworld.wav"],
-            "Chloe":["bgm.wav", "C1.wav", "C2.wav", "C3.wav"]
+            "Chloe":["bgm.wav", "C1.wav", "C2.wav", "C3.wav"],
+            "Samuel":["bgm.wav", "Sam 1.wav", "Sam 2.wav", "Sam 3.wav"]
         }
 
         if GameState.current == "Default":
@@ -428,6 +429,9 @@ class IntroPage(Page):
             GameState.musicTrack = tracks["Chloe"]
             GameState.current = "Chloe"
         elif GameState.current == "Chloe":
+            GameState.musicTrack = tracks["Samuel"]
+            GameState.current = "Samuel"
+        elif GameState.current == "Samuel":
             GameState.musicTrack = tracks["default"]
             GameState.current = "Default"
         audioButton.configure(text=f"{GameState.current}: Current Track")
