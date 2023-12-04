@@ -134,7 +134,7 @@ goldenQuestions=[ #Added by Cheska
 
 # Data Classes---------------------------
 class GameState():
-    stage = 3
+    stage = 1
     musicTrack = ["bgm.wav","bgm.wav","bgm.wav", "bgm.wav"]
     current = "Default"
     actualQuestions={}
