@@ -314,7 +314,7 @@ possibleQuestions = {
       "Answer": "a"},
       {"Question": "How many Harry Potter books and movies are there?",
       "Choices": ["a) 7 books, 7 movies", "b) 8 books, 8 movies", "c) 7 books, 8 movies", "d) 7 books, 6 movies"],
-      "Answer": "a"},
+      "Answer": "c"},
       {"Question": "What day is Star Wars day?",
       "Choices": ["a) May 5", "b) April 4", "c) June 4", "d) May 4"],
       "Answer": "d"},
