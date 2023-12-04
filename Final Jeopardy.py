@@ -1720,7 +1720,7 @@ class EndPage(Page):
         gameDifficulty = gameState.gameDifficulty
         stage = gameState.stage
 
-        if gameDifficulty == "STORY MODE":
+        if gameDifficulty == "STORY MODE" and isPlayerWon:
             endTurnButton = tk.Button(root, text = "Continue Story", command= lambda state=gameState: self.next_story(gameState), font=(FONT[0], 20, "bold"),bg="#F5E6CA", fg="#020024")
             endTurnButton.pack(pady=10)
         else:
