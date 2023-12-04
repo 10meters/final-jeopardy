@@ -329,10 +329,10 @@ class MenuPage(Page):
                             text="STORY MODE - Can you get yourself out of Jeopardy?",
                             command=lambda: self.process("STORY MODE", gameState))
         FirstGradeButton = tk.Button(
-                            text="First Grader - Gets it right ~33% of the time",
+                            text="First Grader - Gets it right 33% of the time",
                             command=lambda: self.process("FIRST_GRADER", gameState))
         HighSchoolerButton = tk.Button(
-                            text="High Schooler - Gets it right ~60% of the time",
+                            text="High Schooler - Gets it right 50% of the time",
                             command=lambda: self.process("HIGH_SCHOOLER", gameState))
         PionnerButton = tk.Button(
                             text="BSDSBA BATCH 2027 STUDENT PIONEER - Gets it right ALL THE TIME",
